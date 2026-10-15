@@ -1,0 +1,41 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Q-WORKS/1.0.0": {
+        "dependencies": {
+          "Microsoft.AspNetCore.SpaProxy": "8.0.31"
+        },
+        "runtime": {
+          "Q-WORKS.dll": {}
+        }
+      },
+      "Microsoft.AspNetCore.SpaProxy/8.0.31": {
+        "runtime": {
+          "lib/net8.0/Microsoft.AspNetCore.SpaProxy.dll": {
+            "assemblyVersion": "8.0.31.0",
+            "fileVersion": "8.0.3126.42125"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Q-WORKS/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.AspNetCore.SpaProxy/8.0.31": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-o9hbbmoRGgTrt2cznRI52qYCizDA1iSWExnZsrRDQQmvEls11374zv63Sw6ASlfOPlzBD4zeSrIRr5eGrEK6pg==",
+      "path": "microsoft.aspnetcore.spaproxy/8.0.31",
+      "hashPath": "microsoft.aspnetcore.spaproxy.8.0.31.nupkg.sha512"
+    }
+  }
+}

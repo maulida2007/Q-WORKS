@@ -1,0 +1,10 @@
+{
+"SpaProxyServer": {
+"ServerUrl": "http://localhost:3000",
+"RedirectUrl": "",
+"LaunchCommand": "npm.cmd run dev",
+"WorkingDirectory": "C:\\UJIKOM\\Q-WORKS\\./",
+"MaxTimeoutInSeconds": "120",
+"KeepRunning": "false"
+}
+}

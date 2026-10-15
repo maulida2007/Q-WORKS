@@ -1,0 +1,114 @@
+{
+  "version": 3,
+  "targets": {
+    "net8.0": {
+      "Microsoft.AspNetCore.SpaProxy/8.0.31": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Microsoft.AspNetCore.SpaProxy.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.AspNetCore.SpaProxy.dll": {}
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ],
+        "build": {
+          "build/Microsoft.AspNetCore.SpaProxy.targets": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Microsoft.AspNetCore.SpaProxy/8.0.31": {
+      "sha512": "o9hbbmoRGgTrt2cznRI52qYCizDA1iSWExnZsrRDQQmvEls11374zv63Sw6ASlfOPlzBD4zeSrIRr5eGrEK6pg==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.spaproxy/8.0.31",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "THIRD-PARTY-NOTICES.TXT",
+        "build/Microsoft.AspNetCore.SpaProxy.targets",
+        "lib/net8.0/Microsoft.AspNetCore.SpaProxy.dll",
+        "microsoft.aspnetcore.spaproxy.8.0.31.nupkg.sha512",
+        "microsoft.aspnetcore.spaproxy.nuspec"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net8.0": [
+      "Microsoft.AspNetCore.SpaProxy >= 8.*"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Acer\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\UJIKOM\\Q-WORKS\\Q-WORKS.csproj",
+      "projectName": "Q-WORKS",
+      "projectPath": "C:\\UJIKOM\\Q-WORKS\\Q-WORKS.csproj",
+      "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
+      "outputPath": "C:\\UJIKOM\\Q-WORKS\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\Acer\\AppData\\Roaming\\NuGet\\NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net8.0"
+      ],
+      "sources": {
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      }
+    },
+    "frameworks": {
+      "net8.0": {
+        "targetAlias": "net8.0",
+        "dependencies": {
+          "Microsoft.AspNetCore.SpaProxy": {
+            "target": "Package",
+            "version": "[8.*, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.AspNetCore.App": {
+            "privateAssets": "none"
+          },
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Users\\Acer\\AppData\\Local\\Microsoft\\dotnet\\sdk\\8.0.424/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}
