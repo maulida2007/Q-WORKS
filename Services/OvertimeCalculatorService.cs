@@ -33,6 +33,25 @@ namespace QWorks.Services
         // Hari Libur Nasional Dinamis Indonesia (Kalender Hijriah, Saka, Imlek, Masehi Dinamis)
         private static readonly Dictionary<string, string> DynamicNationalHolidays = new()
         {
+            // --- TAHUN 2027 (Prakiraan Kalender Nasional) ---
+            { "2027-01-01", "Tahun Baru 2027 Masehi" },
+            { "2027-01-06", "Isra Mi'raj Nabi Muhammad SAW" },
+            { "2027-02-06", "Tahun Baru Imlek 2578 Kongzili" },
+            { "2027-03-09", "Hari Suci Nyepi (Tahun Baru Saka 1949)" },
+            { "2027-03-10", "Hari Raya Idul Fitri 1448 H (Hari Ke-1)" },
+            { "2027-03-11", "Hari Raya Idul Fitri 1448 H (Hari Ke-2)" },
+            { "2027-03-26", "Wafat Yesus Kristus (Jumat Agung)" },
+            { "2027-03-28", "Hari Paskah" },
+            { "2027-05-01", "Hari Buruh Internasional" },
+            { "2027-05-06", "Kenaikan Yesus Kristus" },
+            { "2027-05-17", "Hari Raya Idul Adha 1448 H" },
+            { "2027-05-20", "Hari Raya Waisak 2571 BE" },
+            { "2027-06-01", "Hari Lahir Pancasila" },
+            { "2027-07-06", "Tahun Baru Islam 1449 H" },
+            { "2027-08-14", "Maulid Nabi Muhammad SAW" },
+            { "2027-08-17", "Hari Kemerdekaan RI Ke-82" },
+            { "2027-12-25", "Hari Raya Natal" },
+
             // --- TAHUN 2026 ---
             { "2026-01-01", "Tahun Baru 2026 Masehi" },
             { "2026-01-16", "Isra Mi'raj Nabi Muhammad SAW" },
@@ -155,19 +174,19 @@ namespace QWorks.Services
                 if (jamOvertime <= 7)
                 {
                     double tul = Math.Round(jamOvertime * 2.0, 2);
-                    return $"{jamOvertime:0.#} jam kerja × 2.0 = {tul:0.#} TUL (Hari Libur: {jamOvertime:0.#} jam kerja bersih setelah istirahat 1 jam)";
+                    return $"{jamOvertime:0.0#} jam kerja × 2.0 = {tul:0.0#} TUL (Hari Libur: {jamOvertime:0.0#} jam kerja bersih setelah istirahat 15 menit)";
                 }
                 else if (jamOvertime <= 8)
                 {
                     double sisa = Math.Round(jamOvertime - 7.0, 2);
                     double tul = Math.Round(14.0 + sisa * 3.0, 2);
-                    return $"7 jam (14 TUL) + {sisa:0.#} jam × 3.0 = {tul:0.#} TUL (Hari Libur Jam ke-8: ×3.0)";
+                    return $"7 jam (14 TUL) + {sisa:0.0#} jam × 3.0 = {tul:0.0#} TUL (Hari Libur Jam ke-8: ×3.0)";
                 }
                 else
                 {
                     double sisa = Math.Round(jamOvertime - 8.0, 2);
                     double tul = Math.Round(17.0 + sisa * 4.0, 2);
-                    return $"7 jam (14 TUL) + 1 jam (3 TUL) + {sisa:0.#} jam × 4.0 = {tul:0.#} TUL (Hari Libur Jam ke-9+: ×4.0)";
+                    return $"7 jam (14 TUL) + 1 jam (3 TUL) + {sisa:0.0#} jam × 4.0 = {tul:0.0#} TUL (Hari Libur Jam ke-9+: ×4.0)";
                 }
             }
             else
@@ -175,13 +194,13 @@ namespace QWorks.Services
                 if (jamOvertime <= 1)
                 {
                     double tul = Math.Round(jamOvertime * 1.5, 2);
-                    return $"{jamOvertime:0.#} jam × 1.5 = {tul:0.#} TUL (Hari Kerja Jam ke-1: ×1.5)";
+                    return $"{jamOvertime:0.0#} jam × 1.5 = {tul:0.0#} TUL (Hari Kerja Jam ke-1: ×1.5)";
                 }
                 else
                 {
                     double sisa = Math.Round(jamOvertime - 1.0, 2);
                     double tul = Math.Round(1.5 + sisa * 2.0, 2);
-                    return $"1 jam (1.5 TUL) + {sisa:0.#} jam × 2.0 = {tul:0.#} TUL (Hari Kerja: Jam 1 ×1.5, Jam 2+ ×2.0)";
+                    return $"1 jam (1.5 TUL) + {sisa:0.0#} jam × 2.0 = {tul:0.0#} TUL (Hari Kerja: Jam 1 ×1.5, Jam 2+ ×2.0)";
                 }
             }
         }
@@ -299,13 +318,13 @@ namespace QWorks.Services
                 double rawHours = Math.Round(rawMinutes / 60.0, 2);
 
                 // ATURAN 3: Validasi durasi input minimal
-                // Setiap lembur mendapatkan pengurangan tetap 1 jam (60 menit) untuk istirahat.
-                // Jika input <= 1 jam (60 menit), durasi bersih <= 0 sehingga ditolak.
-                if (rawMinutes <= 60)
+                // Setiap lembur mendapatkan pengurangan tetap 15 menit (0.25 jam) untuk istirahat.
+                // Jika input <= 15 menit, durasi bersih <= 0 sehingga ditolak.
+                if (rawMinutes <= 15)
                 {
                     return new OvertimeCalculationResult(
                         false,
-                        $"Durasi lembur input ({rawHours:0.#} jam / {rawMinutes} menit) tidak valid. Durasi input harus lebih dari 1 jam (60 menit) karena terdapat pengurangan tetap 1 jam untuk waktu istirahat.",
+                        $"Durasi lembur input ({rawHours:0.0#} jam / {rawMinutes} menit) tidak valid. Durasi input harus lebih dari 15 menit (0.25 jam) karena terdapat pengurangan tetap 15 menit untuk waktu istirahat.",
                         null,
                         "INVALID_DURATION",
                         "Durasi Input Tidak Valid",
@@ -324,16 +343,14 @@ namespace QWorks.Services
                 bool isEffectiveHoliday = isHoliday || holidayInfo.IsHoliday;
 
                 // ATURAN 2: Hari Libur (Hari Minggu atau Libur Nasional)
-                // - Maksimal total durasi input lembur adalah 7 jam (420 menit), sudah termasuk 1 jam istirahat.
-                // - Jam kerja efektif/bersih adalah maksimal 6 jam (durasi input - 1 jam istirahat).
-                // - Semua karyawan tidak diperbolehkan memasukkan lebih dari 7 jam total input (6 jam kerja + 1 jam istirahat).
+                // - Maksimal total durasi input lembur adalah 7 jam (420 menit), sudah termasuk istirahat.
                 if (isEffectiveHoliday)
                 {
                     if (rawMinutes > 7 * 60)
                     {
                         return new OvertimeCalculationResult(
                             false,
-                            $"Untuk hari libur ({holidayInfo.Description}), batas maksimal input adalah 7 jam (sudah termasuk 1 jam istirahat, sehingga jam kerja efektif cuma 6 jam). Durasi input Anda adalah {rawHours:0.#} jam ({rawMinutes} menit).",
+                            $"Untuk hari libur ({holidayInfo.Description}), batas maksimal input adalah 7 jam. Durasi input Anda adalah {rawHours:0.0#} jam ({rawMinutes} menit).",
                             null,
                             "EXCEEDS_HOLIDAY_LIMIT",
                             $"Melebihi Batas Hari Libur ({holidayInfo.Description})",
@@ -347,7 +364,7 @@ namespace QWorks.Services
                         );
                     }
 
-                    int countedMinutes = rawMinutes - 60; // kurangi 1 jam istirahat
+                    int countedMinutes = rawMinutes - 15; // kurangi 15 menit istirahat (0.25 jam)
                     double jamOvertime = Math.Round(countedMinutes / 60.0, 2);
                     double totalTul = CalculateTul(jamOvertime, true);
                     string breakdown = GetTULBreakdown(jamOvertime, true);
@@ -420,7 +437,7 @@ namespace QWorks.Services
                     );
                 }
 
-                int countedMin = rawMinutes - 60; // Pengurangan tetap 1 jam istirahat
+                int countedMin = rawMinutes - 15; // Pengurangan tetap 15 menit istirahat (0.25 jam)
                 double jamOt = Math.Round(countedMin / 60.0, 2);
                 double tul = CalculateTul(jamOt, false);
                 string tulFormula = GetTULBreakdown(jamOt, false);
@@ -455,12 +472,12 @@ namespace QWorks.Services
                 return new OvertimeCalculationResult(false, "Durasi lembur tidak valid atau bernilai 0.", null, "UNKNOWN", "Unknown", 0, 0, 0, 0, false, "", "");
             }
 
-            // ATURAN 3: Validasi input minimal
-            if (hours <= 1.0)
+            // ATURAN 3: Validasi input minimal (harus > 15 menit / 0.25 jam)
+            if (hours <= 0.25)
             {
                 return new OvertimeCalculationResult(
                     false, 
-                    $"Durasi lembur ({hours:0.#} jam) tidak valid. Durasi input harus lebih dari 1 jam karena terdapat pengurangan tetap 1 jam untuk waktu istirahat.", 
+                    $"Durasi lembur ({hours:0.0#} jam) tidak valid. Durasi input harus lebih dari 15 menit (0.25 jam) karena terdapat pengurangan tetap 15 menit untuk waktu istirahat.", 
                     null, 
                     "INVALID_DURATION", 
                     "Durasi Input Tidak Valid", 
@@ -487,7 +504,7 @@ namespace QWorks.Services
                 {
                     return new OvertimeCalculationResult(
                         false,
-                        $"Untuk hari libur ({holidayInfo.Description}), batas maksimal input adalah 7 jam (sudah termasuk 1 jam istirahat, sehingga jam kerja efektif cuma 6 jam). Durasi input Anda adalah {hours:0.#} jam ({rawMinutes} menit).",
+                        $"Untuk hari libur ({holidayInfo.Description}), batas maksimal input adalah 7 jam. Durasi input Anda adalah {hours:0.0#} jam ({rawMinutes} menit).",
                         null,
                         "EXCEEDS_HOLIDAY_LIMIT",
                         $"Melebihi Batas Hari Libur ({holidayInfo.Description})",
@@ -501,13 +518,13 @@ namespace QWorks.Services
                     );
                 }
 
-                // ATURAN 2: durasi input - 1 jam
-                countedMinutes = rawMinutes - 60;
+                // Pengurangan 15 menit istirahat (0.25 jam)
+                countedMinutes = rawMinutes - 15;
             }
             else
             {
-                // ATURAN 1: durasi input - 1 jam
-                countedMinutes = rawMinutes - 60;
+                // Pengurangan 15 menit istirahat (0.25 jam)
+                countedMinutes = rawMinutes - 15;
             }
 
             double jamOvertime = Math.Round(countedMinutes / 60.0, 2);

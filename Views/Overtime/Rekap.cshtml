@@ -71,7 +71,7 @@
       <div>
         <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total Jam Lembur</div>
         <div style="font-size: 1.45rem; font-weight: 800; color: #fbbf24; line-height: 1.2;">
-          @Model.TotalJamOvertime.ToString("N1") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">Jam</span>
+          @Model.TotalJamOvertime.ToString("0.0#") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">Jam</span>
         </div>
       </div>
     </div>
@@ -84,7 +84,7 @@
       <div>
         <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total TUL</div>
         <div style="font-size: 1.45rem; font-weight: 800; color: #34d399; line-height: 1.2;">
-          @Model.TotalTUL.ToString("N1") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">TUL</span>
+          @Model.TotalTUL.ToString("0.0#") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">TUL</span>
         </div>
       </div>
     </div>
@@ -269,17 +269,14 @@
             <th style="width: 26%; text-align: left; padding: 14px 12px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Karyawan & NPK</th>
             <th style="width: 14%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Jam Lembur</th>
             <th style="width: 11%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Total TUL</th>
-            @if (isAdmin)
-            {
-              <th style="width: 12%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Aksi</th>
-            }
+            <th style="width: 12%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Aksi</th>
           </tr>
         </thead>
         <tbody>
           @if (Model.Records.Count == 0)
           {
             <tr>
-              <td colspan="@(isAdmin ? 7 : 6)" style="text-align: center; padding: 50px 20px; color: #8ca8cf;">
+              <td colspan="7" style="text-align: center; padding: 50px 20px; color: #8ca8cf;">
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
                   <i data-lucide="file-spreadsheet" style="width: 40px; height: 40px; color: #64748b;"></i>
                   <span style="font-size: 0.95rem; font-weight: 600;">
@@ -350,31 +347,46 @@
                 <td style="text-align: center; padding: 12px 8px;">
                   <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.92rem; font-weight: 800; color: #FFF8E7;">
                     <i data-lucide="clock" style="width: 14px; height: 14px; color: #00d2ff;"></i>
-                    @item.JamOvertime.ToString("N1") <small style="color: #8CC1E9; font-size: 0.76rem;">Jam</small>
+                    @item.JamOvertime.ToString("0.0#") <small style="color: #8CC1E9; font-size: 0.76rem;">Jam</small>
                   </span>
                 </td>
 
                 <!-- 6. Total TUL -->
                 <td style="text-align: center; padding: 12px 8px;">
                   <span style="display: inline-block; padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24;">
-                    @item.TotalTul.ToString("N1") TUL
+                    @item.TotalTul.ToString("0.0#") TUL
                   </span>
                 </td>
 
                 <!-- 7. Aksi -->
-                @if (isAdmin)
-                {
-                  <td style="text-align: center; padding: 12px 8px;">
+                <td style="text-align: center; padding: 12px 8px;">
+                  @{
+                    bool canManage = isAdmin || (currentUser != null && item.UserNpk == currentUser.Npk);
+                  }
+                  @if (canManage)
+                  {
                     <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-                      <form method="post" action="/Overtime/Delete/@item.Id" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan lembur ini?');" style="margin: 0;">
+                      <button
+                        type="button"
+                        onclick="openEditOvertimeModal(@item.Id, '@item.WorkDate.ToString("yyyy-MM-dd")', '@item.ShiftName', '@(item.JamWaktu ?? "")', '@Html.Raw(Html.Encode(item.Reason ?? "Lembur operasional QC & finishing"))');"
+                        style="width: 28px; height: 28px; border-radius: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;"
+                        title="Edit lembur">
+                        <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>
+                      </button>
+
+                      <form method="post" action="/Overtime/Delete/@item.Id" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan lembur @item.UserName tanggal @item.WorkDate.ToString("yyyy-MM-dd")?');" style="margin: 0;">
                         @Html.AntiForgeryToken()
                         <button type="submit" style="width: 28px; height: 28px; border-radius: 6px; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fb7185; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;" title="Hapus record">
                           <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
                         </button>
                       </form>
                     </div>
-                  </td>
-                }
+                  }
+                  else
+                  {
+                    <span style="color: #475569; font-size: 0.75rem;">-</span>
+                  }
+                </td>
               </tr>
               idx++;
             }
@@ -384,6 +396,72 @@
     </div>
   </div>
 
+</div>
+
+<!-- Modal Edit Data Lembur -->
+<div id="modalEditOvertime" class="modal-backdrop-custom" style="display: none; position: fixed; inset: 0; background: rgba(5, 12, 24, 0.85); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #091a38 0%, #0d2654 100%); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 16px; padding: 24px 28px; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+      <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #FFF8E7; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="pencil" style="width: 18px; height: 18px; color: #00d2ff;"></i>
+        <span>Edit Catatan Lembur</span>
+      </h3>
+      <button type="button" onclick="closeEditOvertimeModal();" style="background: none; border: none; color: #94a3b8; cursor: pointer;">
+        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+
+    <form id="editOvertimeForm" method="post" action="/Overtime/Edit" onsubmit="return syncEditJamWaktu();">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="id" id="editOvertimeId" value="0" />
+      <input type="hidden" name="jamWaktu" id="editJamWaktuHidden" value="" />
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <!-- Tanggal Lembur -->
+        <div>
+          <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">Tanggal Lembur</label>
+          <input type="date" name="workDate" id="editWorkDate" required style="width: 100%; height: 42px; padding: 0 14px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-weight: 700; box-sizing: border-box;" />
+        </div>
+
+        <!-- Shift -->
+        <div>
+          <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">Shift Kerja</label>
+          <select name="shiftName" id="editShiftName" required style="width: 100%; height: 42px; padding: 0 14px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-weight: 700; box-sizing: border-box;">
+            <option value="Shift 1">Shift 1 (Malam 22:30 - 07:30)</option>
+            <option value="Shift 2">Shift 2 (Pagi 07:30 - 16:30)</option>
+          </select>
+        </div>
+
+        <!-- Jam Mulai & Jam Selesai -->
+        <div>
+          <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">Rentang Waktu Lembur</label>
+          <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center;">
+            <input type="time" id="editJamMulai" required style="height: 42px; padding: 0 12px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-weight: 700; box-sizing: border-box; text-align: center;" />
+            <span style="color: #94a3b8; font-weight: 700;">s/d</span>
+            <input type="time" id="editJamSelesai" required style="height: 42px; padding: 0 12px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-weight: 700; box-sizing: border-box; text-align: center;" />
+          </div>
+          <div style="font-size: 0.74rem; color: #8CC1E9; margin-top: 4px;">
+            Durasi jam lembur dan TUL akan dihitung ulang secara otomatis oleh sistem.
+          </div>
+        </div>
+
+        <!-- Alasan Lembur -->
+        <div>
+          <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">Alasan Lembur</label>
+          <input type="text" name="reason" id="editReason" placeholder="Contoh: Lembur operasional QC & finishing" style="width: 100%; height: 42px; padding: 0 14px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-weight: 600; box-sizing: border-box;" />
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <button type="button" onclick="closeEditOvertimeModal();" style="padding: 9px 18px; border-radius: 8px; background: transparent; border: 1px solid rgba(67, 139, 196, 0.35); color: #8CC1E9; font-weight: 600; cursor: pointer;">
+          Batal
+        </button>
+        <button type="submit" style="padding: 9px 20px; border-radius: 8px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: none; color: #ffffff; font-weight: 700; cursor: pointer;">
+          Simpan Perubahan
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
 
 @section Scripts {
@@ -402,5 +480,46 @@
   }
   updateRekapLiveClock();
   setInterval(updateRekapLiveClock, 1000);
+
+  function openEditOvertimeModal(id, workDate, shiftName, jamWaktu, reason) {
+    document.getElementById('editOvertimeId').value = id;
+    document.getElementById('editWorkDate').value = workDate;
+    document.getElementById('editShiftName').value = shiftName || 'Shift 1';
+    document.getElementById('editReason').value = reason || '';
+
+    if (jamWaktu && jamWaktu.indexOf('-') !== -1) {
+      var parts = jamWaktu.split('-');
+      document.getElementById('editJamMulai').value = parts[0].trim();
+      document.getElementById('editJamSelesai').value = parts[1].trim();
+    } else {
+      document.getElementById('editJamMulai').value = '16:30';
+      document.getElementById('editJamSelesai').value = '19:30';
+    }
+
+    document.getElementById('modalEditOvertime').style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function closeEditOvertimeModal() {
+    document.getElementById('modalEditOvertime').style.display = 'none';
+  }
+
+  function syncEditJamWaktu() {
+    var start = document.getElementById('editJamMulai').value;
+    var end = document.getElementById('editJamSelesai').value;
+    if (!start || !end) {
+      alert('Jam mulai dan jam selesai wajib diisi!');
+      return false;
+    }
+    document.getElementById('editJamWaktuHidden').value = start + ' - ' + end;
+    return true;
+  }
+
+  window.addEventListener('click', function(e) {
+    var modal = document.getElementById('modalEditOvertime');
+    if (e.target === modal) {
+      closeEditOvertimeModal();
+    }
+  });
 </script>
 }

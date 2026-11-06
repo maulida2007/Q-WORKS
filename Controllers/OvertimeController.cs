@@ -485,17 +485,20 @@ namespace QWorks.Controllers
             [FromForm] string reason)
         {
             var user = _authService.GetCurrentUser();
-            if (user == null || user.IsKaryawan)
-            {
-                TempData["ToastMessage"] = "Akses ditolak: Karyawan tidak memiliki izin mengubah data lembur.";
-                TempData["ToastType"] = "danger";
-                return RedirectToAction("Rekap");
-            }
+            if (user == null) return RedirectToAction("Login", "Auth");
 
             var req = await _context.OvertimeRequests.FindAsync(id);
             if (req == null)
             {
                 TempData["ToastMessage"] = "Data tidak ditemukan.";
+                TempData["ToastType"] = "danger";
+                return RedirectToAction("Rekap");
+            }
+
+            // Otorisasi: Admin dapat mengubah semua data. Karyawan HANYA dapat mengubah data lembur miliknya sendiri.
+            if (user.IsKaryawan && req.UserNpk != user.Npk && req.UserId != user.Id)
+            {
+                TempData["ToastMessage"] = "Akses ditolak: Anda hanya memiliki izin mengubah data lembur milik Anda sendiri.";
                 TempData["ToastType"] = "danger";
                 return RedirectToAction("Rekap");
             }
@@ -574,17 +577,20 @@ namespace QWorks.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var user = _authService.GetCurrentUser();
-            if (user == null || user.IsKaryawan)
-            {
-                TempData["ToastMessage"] = "Akses ditolak: Karyawan tidak memiliki izin menghapus data lembur.";
-                TempData["ToastType"] = "danger";
-                return RedirectToAction("Rekap");
-            }
+            if (user == null) return RedirectToAction("Login", "Auth");
 
             var req = await _context.OvertimeRequests.FindAsync(id);
             if (req == null)
             {
                 TempData["ToastMessage"] = "Data tidak ditemukan.";
+                TempData["ToastType"] = "danger";
+                return RedirectToAction("Rekap");
+            }
+
+            // Otorisasi: Admin dapat menghapus semua data. Karyawan HANYA dapat menghapus data lembur miliknya sendiri.
+            if (user.IsKaryawan && req.UserNpk != user.Npk && req.UserId != user.Id)
+            {
+                TempData["ToastMessage"] = "Akses ditolak: Anda hanya memiliki izin menghapus data lembur milik Anda sendiri.";
                 TempData["ToastType"] = "danger";
                 return RedirectToAction("Rekap");
             }

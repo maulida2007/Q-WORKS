@@ -34,11 +34,11 @@
             p.Icon,
             p.Color,
             p.BorderGlow,
-            TotalHours = Math.Round(hours, 1),
-            TotalTUL = Math.Round(tul, 1),
+            TotalHours = Math.Round(hours, 2),
+            TotalTUL = Math.Round(tul, 2),
             TotalEmps = emps,
-            Shift1Hours = Math.Round(s1, 1),
-            Shift2Hours = Math.Round(s2, 1)
+            Shift1Hours = Math.Round(s1, 2),
+            Shift2Hours = Math.Round(s2, 2)
         };
     }).ToList();
 
@@ -232,7 +232,7 @@
 
       <div class="kpi-body-row">
         <div class="kpi-main-number-block">
-          <span class="kpi-main-number">@Model.TotalJamOvertime.ToString("N1")</span>
+          <span class="kpi-main-number">@Model.TotalJamOvertime.ToString("0.0#")</span>
           <span class="kpi-main-unit">Jam</span>
         </div>
       </div>
@@ -809,16 +809,16 @@
   // 3. Mingguan Chart (W1-W4)
   var mingguanLabels = ['W1', 'W2', 'W3', 'W4'];
   var mingguanHours = [
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.JamOvertime), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.JamOvertime), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.JamOvertime), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.JamOvertime), 1)
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.JamOvertime), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.JamOvertime), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.JamOvertime), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.JamOvertime), 2)
   ];
   var mingguanTuls = [
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.TotalTul), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.TotalTul), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.TotalTul), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.TotalTul), 1)
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.TotalTul), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.TotalTul), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.TotalTul), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.TotalTul), 2)
   ];
 
   var ctxMingguan = document.getElementById('mingguanChart');

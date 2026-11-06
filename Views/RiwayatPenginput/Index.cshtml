@@ -165,7 +165,7 @@
       <div>
         <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total Jam Lembur</div>
         <div style="font-size: 1.45rem; font-weight: 800; color: #fbbf24; line-height: 1.2;">
-          @totalJam.ToString("N1") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">Jam</span>
+          @totalJam.ToString("0.0#") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">Jam</span>
         </div>
       </div>
     </div>
@@ -178,7 +178,7 @@
       <div>
         <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total TUL Lembur</div>
         <div style="font-size: 1.45rem; font-weight: 800; color: #34d399; line-height: 1.2;">
-          @totalTul.ToString("N1") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">TUL</span>
+          @totalTul.ToString("0.0#") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">TUL</span>
         </div>
       </div>
     </div>
@@ -344,12 +344,12 @@
 
                 <!-- 9. JAM LEMBUR -->
                 <td style="padding: 11px 10px; text-align: right; color: #f8fafc; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
-                  @rec.JamOvertime.ToString("N1")
+                  @rec.JamOvertime.ToString("0.0#")
                 </td>
 
                 <!-- 10. TOTAL TUL -->
                 <td style="padding: 11px 10px; text-align: right; color: #34d399; font-weight: 800; font-family: 'JetBrains Mono', monospace;">
-                  @rec.TotalTul.ToString("N1")
+                  @rec.TotalTul.ToString("0.0#")
                 </td>
               </tr>
               idx++;

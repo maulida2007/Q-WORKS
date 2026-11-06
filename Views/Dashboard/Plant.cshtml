@@ -177,7 +177,7 @@
 
       <div class="kpi-body-row">
         <div class="kpi-main-number-block">
-          <span class="kpi-main-number">@Model.TotalJamOvertime.ToString("N1")</span>
+          <span class="kpi-main-number">@Model.TotalJamOvertime.ToString("0.0#")</span>
           <span class="kpi-main-unit">Jam</span>
         </div>
       </div>
@@ -578,16 +578,16 @@
   // 2. Mingguan Chart (W1-W4)
   var mingguanLabels = ['W1', 'W2', 'W3', 'W4'];
   var mingguanHours = [
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.JamOvertime), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.JamOvertime), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.JamOvertime), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.JamOvertime), 1)
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.JamOvertime), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.JamOvertime), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.JamOvertime), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.JamOvertime), 2)
   ];
   var mingguanTuls = [
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.TotalTul), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.TotalTul), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.TotalTul), 1),
-    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.TotalTul), 1)
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.TotalTul), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.TotalTul), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.TotalTul), 2),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.TotalTul), 2)
   ];
 
   var ctxMingguan = document.getElementById('plantMingguanChart');

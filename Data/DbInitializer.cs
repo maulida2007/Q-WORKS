@@ -192,6 +192,45 @@ namespace QWorks.Data
                 }
                 context.SaveChanges();
             }
+
+            // 7. SYNC PENGURANGAN ISTIRAHAT LEMBUR 15 MENIT (0.25 JAM) UNTUK SEMUA REKAP OVERTIME & PLANT
+            // Memastikan seluruh data lembur dihitung dengan pengurangan 15 menit (bukan 60 menit)
+            var allRecords = context.OvertimeRequests.ToList();
+            bool hasUpdates = false;
+            foreach (var r in allRecords)
+            {
+                int rawMin = r.RawDurationMinutes;
+                if (rawMin <= 0 && !string.IsNullOrWhiteSpace(r.JamWaktu) && r.JamWaktu.Contains("-"))
+                {
+                    var parts = r.JamWaktu.Split('-');
+                    if (parts.Length == 2 && TimeSpan.TryParse(parts[0].Trim(), out var t1) && TimeSpan.TryParse(parts[1].Trim(), out var t2))
+                    {
+                        var diff = (t2 >= t1) ? (t2 - t1).TotalMinutes : (t2.Add(TimeSpan.FromDays(1)) - t1).TotalMinutes;
+                        rawMin = (int)Math.Round(diff);
+                        r.RawDurationMinutes = rawMin;
+                        hasUpdates = true;
+                    }
+                }
+
+                if (rawMin > 15)
+                {
+                    int expectedCounted = rawMin - 15;
+                    double expectedJam = Math.Round(expectedCounted / 60.0, 2);
+                    double expectedTul = calcService.CalculateTul(expectedJam, r.IsHoliday);
+
+                    if (Math.Abs(r.JamOvertime - expectedJam) > 0.01 || Math.Abs(r.TotalTul - expectedTul) > 0.01 || r.CountedDurationMinutes != expectedCounted)
+                    {
+                        r.CountedDurationMinutes = expectedCounted;
+                        r.JamOvertime = expectedJam;
+                        r.TotalTul = expectedTul;
+                        hasUpdates = true;
+                    }
+                }
+            }
+            if (hasUpdates)
+            {
+                context.SaveChanges();
+            }
         }
     }
 }

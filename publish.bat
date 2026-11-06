@@ -25,6 +25,11 @@ set /p PUB_MODE="Pilihan Anda (1/2, default 1): "
 if "%PUB_MODE%"=="" set PUB_MODE=1
 
 echo.
+if exist "%~dp0publish_output" (
+    echo Membersihkan folder publish_output lama agar output bersih...
+    rmdir /s /q "%~dp0publish_output"
+)
+
 if "%PUB_MODE%"=="2" (
     echo [1/2] Melakukan dotnet publish (Framework-Dependent Release)...
     dotnet publish -c Release -o ./publish_output

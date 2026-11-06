@@ -976,6 +976,24 @@
   };
 
   var dynamicHolidays = {
+    // 2027 (Prakiraan Kalender Nasional)
+    '2027-01-01': 'Tahun Baru 2027 Masehi',
+    '2027-01-06': "Isra Mi'raj Nabi Muhammad SAW",
+    '2027-02-06': 'Tahun Baru Imlek 2578 Kongzili',
+    '2027-03-09': 'Hari Suci Nyepi (Tahun Baru Saka 1949)',
+    '2027-03-10': 'Hari Raya Idul Fitri 1448 H (Hari Ke-1)',
+    '2027-03-11': 'Hari Raya Idul Fitri 1448 H (Hari Ke-2)',
+    '2027-03-26': 'Wafat Yesus Kristus (Jumat Agung)',
+    '2027-03-28': 'Hari Paskah',
+    '2027-05-01': 'Hari Buruh Internasional',
+    '2027-05-06': 'Kenaikan Yesus Kristus',
+    '2027-05-17': 'Hari Raya Idul Adha 1448 H',
+    '2027-05-20': 'Hari Raya Waisak 2571 BE',
+    '2027-06-01': 'Hari Lahir Pancasila',
+    '2027-07-06': 'Tahun Baru Islam 1449 H',
+    '2027-08-14': 'Maulid Nabi Muhammad SAW',
+    '2027-08-17': 'Hari Kemerdekaan RI Ke-82',
+    '2027-12-25': 'Hari Raya Natal',
     // 2026
     '2026-01-01': 'Tahun Baru 2026 Masehi',
     '2026-01-16': "Isra Mi'raj Nabi Muhammad SAW",
@@ -1095,6 +1113,16 @@
     recalculatePreview();
   }
 
+  // Helper to format hours & TUL with exact 2 decimals if needed (e.g. 0.25, 1.75) or 1 decimal (1.0, 1.5)
+  function formatDecimal(val) {
+    if (typeof val !== 'number') val = parseFloat(val) || 0;
+    var rounded = Math.round(val * 100) / 100;
+    var s = rounded.toFixed(2);
+    if (s.endsWith('00')) return rounded.toFixed(1);
+    if (s.endsWith('0')) return rounded.toFixed(1);
+    return s;
+  }
+
   // Recalculate duration and TUL client-side
   function recalculatePreview() {
     var inVal = document.getElementById('jamMasukInput').value;
@@ -1123,15 +1151,15 @@
     var statusIcon = document.getElementById('calcStatusIcon');
     var durationBadge = document.getElementById('durationStatusBadge');
 
-    // ATURAN 3: Validasi input <= 1 jam (60 menit)
-    if (rawMinutes <= 60) {
+    // ATURAN 3: Validasi input minimal (harus > 15 menit)
+    if (rawMinutes <= 15) {
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.style.opacity = '0.5';
         submitBtn.style.cursor = 'not-allowed';
       }
       if (statusText) {
-        statusText.innerText = 'STATUS: DURASI TIDAK VALID (<= 1 JAM)';
+        statusText.innerText = 'STATUS: DURASI TIDAK VALID (<= 15 MENIT)';
         statusText.style.color = '#f43f5e';
       }
       if (statusIcon) {
@@ -1139,19 +1167,19 @@
         statusIcon.style.color = '#f43f5e';
       }
       if (durationBadge) {
-        durationBadge.innerText = rawMinutes + ' Menit (Input <= 1 Jam Tidak Valid)';
+        durationBadge.innerText = rawMinutes + ' Menit (Input <= 15 Menit Tidak Valid)';
         durationBadge.style.color = '#fb7185';
         durationBadge.style.background = 'rgba(244, 63, 94, 0.15)';
         durationBadge.style.borderColor = 'rgba(244, 63, 94, 0.35)';
       }
       document.getElementById('previewJamVal').innerText = '0.0';
       document.getElementById('previewTulVal').innerText = '0.0';
-      document.getElementById('previewFormulaBreakdown').innerText = 'Input ' + rawHours.toFixed(1) + ' jam tidak valid. Wajib > 1 jam karena terdapat pengurangan tetap 1 jam istirahat.';
+      document.getElementById('previewFormulaBreakdown').innerText = 'Input ' + formatDecimal(rawHours) + ' jam tidak valid. Wajib > 15 menit karena terdapat pengurangan tetap 15 menit (0.25 jam) istirahat.';
       if (window.lucide) lucide.createIcons();
       return;
     }
 
-    // ATURAN 2: Validasi Hari Libur (Maksimal 7 jam total input: 6 jam kerja + 1 jam istirahat)
+    // ATURAN 2: Validasi Hari Libur (Maksimal 7 jam total input)
     if (effectiveHoliday && rawMinutes > 7 * 60) {
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -1159,7 +1187,7 @@
         submitBtn.style.cursor = 'not-allowed';
       }
       if (statusText) {
-        statusText.innerText = 'STATUS: DITOLAK (HARI LIBUR MAKSIMAL 7 JAM: 6 JAM KERJA + 1 JAM ISTIRAHAT)';
+        statusText.innerText = 'STATUS: DITOLAK (HARI LIBUR MAKSIMAL 7 JAM)';
         statusText.style.color = '#f43f5e';
       }
       if (statusIcon) {
@@ -1167,19 +1195,19 @@
         statusIcon.style.color = '#f43f5e';
       }
       if (durationBadge) {
-        durationBadge.innerText = rawMinutes + ' Menit (' + rawHours.toFixed(1) + ' Jam - Melebihi Batas Maksimal 7 Jam Termasuk Istirahat)';
+        durationBadge.innerText = rawMinutes + ' Menit (' + formatDecimal(rawHours) + ' Jam - Melebihi Batas Maksimal 7 Jam)';
         durationBadge.style.color = '#fb7185';
         durationBadge.style.background = 'rgba(244, 63, 94, 0.15)';
         durationBadge.style.borderColor = 'rgba(244, 63, 94, 0.35)';
       }
       document.getElementById('previewJamVal').innerText = '0.0';
       document.getElementById('previewTulVal').innerText = '0.0';
-      document.getElementById('previewFormulaBreakdown').innerText = 'Untuk hari libur (' + holInfo.desc + '), batas maksimal adalah 7 jam (sudah termasuk 1 jam istirahat, sehingga jam kerja cuma 6 jam).';
+      document.getElementById('previewFormulaBreakdown').innerText = 'Untuk hari libur (' + holInfo.desc + '), batas maksimal adalah 7 jam.';
       if (window.lucide) lucide.createIcons();
       return;
     }
 
-    // Input Valid (> 60 menit dan <= 7 jam di hari libur)
+    // Input Valid (> 15 menit dan <= 7 jam di hari libur)
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.style.opacity = '1';
@@ -1193,18 +1221,18 @@
 
     if (effectiveHoliday) {
       // ATURAN 2: Hari Libur (Minggu / Libur Nasional)
-      // Pengurangan tetap 1 jam untuk istirahat (maksimal 7 jam input -> kerja efektif cuma 6 jam).
-      // Rumus: durasi kerja bersih = durasi input - 1 jam istirahat
-      countedMinutes = rawMinutes - 60; // kurangi 1 jam istirahat
+      // Pengurangan tetap 15 menit untuk istirahat (0.25 jam).
+      // Rumus: durasi kerja bersih = durasi input - 15 menit istirahat
+      countedMinutes = rawMinutes - 15; // kurangi 15 menit istirahat
       jamOvertime = Math.round((countedMinutes / 60.0) * 100) / 100;
 
       // Hitung TUL Libur (Jam 1-6: x2.0)
       tul = jamOvertime * 2.0;
-      breakdown = jamOvertime.toFixed(1) + ' jam kerja × 2.0 = ' + tul.toFixed(1) + ' TUL (Total ' + rawHours.toFixed(1) + ' jam - 1 jam istirahat = ' + jamOvertime.toFixed(1) + ' jam kerja)';
+      breakdown = formatDecimal(jamOvertime) + ' jam kerja × 2.0 = ' + formatDecimal(tul) + ' TUL (Total ' + formatDecimal(rawHours) + ' jam - 15 menit istirahat = ' + formatDecimal(jamOvertime) + ' jam kerja)';
       tul = Math.round(tul * 100) / 100;
 
       if (durationBadge) {
-        durationBadge.innerText = countedMinutes + ' Menit Bersih (' + jamOvertime.toFixed(1) + ' Jam Kerja Efektif + 1 Jam Istirahat)';
+        durationBadge.innerText = countedMinutes + ' Menit Bersih (' + formatDecimal(jamOvertime) + ' Jam Kerja Efektif + 15 Menit Istirahat)';
       }
 
       if (statusText) {
@@ -1218,24 +1246,24 @@
     } else {
       // ATURAN 1: Hari Kerja Biasa
       // Tidak ada batas maksimal durasi lembur.
-      // Pengurangan tetap 1 jam untuk istirahat.
-      // Rumus: durasi lembur bersih = durasi input - 1 jam.
-      countedMinutes = rawMinutes - 60;
+      // Pengurangan tetap 15 menit untuk istirahat (0.25 jam).
+      // Rumus: durasi lembur bersih = durasi input - 15 menit (0.25 jam).
+      countedMinutes = rawMinutes - 15;
       jamOvertime = Math.round((countedMinutes / 60.0) * 100) / 100;
 
       // Hitung TUL Kerja (Jam 1: x1.5, Jam 2+: x2.0)
       if (jamOvertime <= 1) {
         tul = jamOvertime * 1.5;
-        breakdown = jamOvertime.toFixed(1) + ' jam × 1.5 = ' + tul.toFixed(1) + ' TUL';
+        breakdown = formatDecimal(jamOvertime) + ' jam × 1.5 = ' + formatDecimal(tul) + ' TUL';
       } else {
         tul = 1.5 + (jamOvertime - 1.0) * 2.0;
-        breakdown = '(1 jam × 1.5) + (' + (jamOvertime - 1.0).toFixed(1) + ' jam × 2.0) = ' + tul.toFixed(1) + ' TUL';
+        breakdown = '(1 jam × 1.5) + (' + formatDecimal(jamOvertime - 1.0) + ' jam × 2.0) = ' + formatDecimal(tul) + ' TUL';
       }
 
       tul = Math.round(tul * 100) / 100;
 
       if (durationBadge) {
-        durationBadge.innerText = countedMinutes + ' Menit Bersih (Input: ' + rawHours.toFixed(1) + ' Jam - 1 Jam Istirahat)';
+        durationBadge.innerText = countedMinutes + ' Menit Bersih (Input: ' + formatDecimal(rawHours) + ' Jam - 15 Menit Istirahat)';
       }
 
       if (statusText) {
@@ -1254,8 +1282,8 @@
       durationBadge.style.borderColor = 'rgba(52, 211, 153, 0.3)';
     }
 
-    document.getElementById('previewJamVal').innerText = jamOvertime.toFixed(1);
-    document.getElementById('previewTulVal').innerText = tul.toFixed(1);
+    document.getElementById('previewJamVal').innerText = formatDecimal(jamOvertime);
+    document.getElementById('previewTulVal').innerText = formatDecimal(tul);
     document.getElementById('previewFormulaBreakdown').innerText = breakdown;
 
     if (window.lucide) lucide.createIcons();
@@ -1292,15 +1320,15 @@
       if (outMin < inMin) outMin += 24 * 60;
       var rawMinutes = outMin - inMin;
 
-      if (rawMinutes <= 60) {
+      if (rawMinutes <= 15) {
         e.preventDefault();
-        alert('Durasi input harus lebih dari 1 jam (60 menit) karena terdapat pengurangan tetap 1 jam istirahat.');
+        alert('Durasi input harus lebih dari 15 menit (0.25 jam) karena terdapat pengurangan tetap 15 menit istirahat.');
         return false;
       }
 
       if (effectiveHoliday && rawMinutes > 7 * 60) {
         e.preventDefault();
-        alert('Untuk hari libur (' + holInfo.desc + '), batas maksimal input adalah 7 jam (sudah termasuk 1 jam istirahat, sehingga jam kerja cuma 6 jam).');
+        alert('Untuk hari libur (' + holInfo.desc + '), batas maksimal input adalah 7 jam.');
         return false;
       }
     });
