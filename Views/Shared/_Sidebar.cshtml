@@ -1,0 +1,223 @@
+@inject IAuthService AuthService
+@{
+    var currentUser = AuthService.GetCurrentUser();
+    var allowedDashboards = AuthService.GetAllowedDashboards(currentUser);
+    var currentPath = Context.Request.Path.Value?.ToLowerInvariant() ?? "";
+
+    bool isDashboardActive = currentPath == "" || currentPath == "/" || currentPath.StartsWith("/dashboard");
+    bool isAllPlantsActive = currentPath == "" || currentPath == "/" || currentPath == "/dashboard" || currentPath == "/dashboard/index";
+    bool isInputQc = currentPath.StartsWith("/overtime/input");
+    bool isRekapData = currentPath.StartsWith("/overtime/rekap");
+    bool isMasterPekerja = currentPath.StartsWith("/masterpekerja");
+    bool isRiwayat = currentPath.StartsWith("/riwayatpenginput");
+
+    string defaultDashboardUrl = AuthService.GetDefaultDashboardView(currentUser) == "all-plants"
+        ? "/Dashboard"
+        : $"/Dashboard/Plant/{AuthService.GetDefaultDashboardView(currentUser)}";
+}
+
+<aside class="app-sidebar" id="appSidebar">
+  <!-- Sidebar Header Brand -->
+  <div class="sidebar-brand-container">
+    <div style="display: flex; align-items: center; gap: 12px; flex: 1; overflow: hidden;">
+      <div
+        class="sidebar-brand-logo-glow"
+        id="sidebarLogoGlow"
+        onclick="toggleSidebarCollapse();"
+        style="cursor: pointer;"
+        title="Buka / Tutup Sidebar"
+      >
+        <div class="sidebar-brand-icon-circle">
+          <span class="sidebar-brand-q">Q</span>
+        </div>
+      </div>
+
+      <div
+        class="sidebar-brand-text-block"
+        id="sidebarBrandTextBlock"
+        onclick="toggleSidebarCollapse();"
+        style="cursor: pointer;"
+        title="Tutup Sidebar"
+      >
+        <div class="sidebar-brand-title">Q-WORKS</div>
+        <div class="sidebar-brand-subtitle">Quality Control</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar Navigation Items -->
+  <div class="sidebar-content">
+    
+    <!-- Main Dashboard Primary Tab -->
+    <a
+      href="@defaultDashboardUrl"
+      class="sidebar-nav-item primary-dashboard @(isDashboardActive ? "active" : "")"
+      title="@(currentUser?.IsAdmin == true ? "Dashboard Utama (All Plants)" : $"Dashboard {currentUser?.Plant}")"
+      style="text-decoration: none;"
+    >
+      <i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i>
+      <span class="nav-label">Dashboard</span>
+    </a>
+
+    <!-- Sub-Dashboard Items -->
+    <div class="sidebar-subnav-list">
+      @foreach (var item in allowedDashboards)
+      {
+          string targetUrl = item.Id == "all-plants" ? "/Dashboard" : $"/Dashboard/Plant/{item.Id.Replace("lab-mixing", "mixing")}";
+          bool isActive = false;
+
+          if (item.Id == "all-plants" && isAllPlantsActive)
+          {
+              isActive = true;
+          }
+          else if (item.Id != "all-plants" && currentPath.Contains(item.Id.Replace("lab-mixing", "mixing")))
+          {
+              isActive = true;
+          }
+
+          string iconName = item.Id switch
+          {
+              "all-plants" => "globe",
+              "hose" => "layers",
+              "molded" => "box",
+              "subcont" => "cog",
+              "lab-mixing" => "flask-conical",
+              "mixing" => "flask-conical",
+              "rvi" => "truck",
+              "qre" => "shield-check",
+              _ => "box"
+          };
+
+          <a
+            href="@targetUrl"
+            class="sidebar-subnav-item @(isActive ? "active" : "")"
+            title="@item.Name"
+            style="text-decoration: none;"
+          >
+            <div class="subnav-left">
+              <i data-lucide="@iconName" style="width: 18px; height: 18px;"></i>
+              <span>@item.Name</span>
+            </div>
+            @if (isActive)
+            {
+                <span class="active-dot-indicator"></span>
+            }
+          </a>
+      }
+    </div>
+
+    <!-- Section: Overtime Dropdown Group -->
+    <div class="sidebar-accordion-group">
+      <div
+        class="sidebar-accordion-header"
+        id="overtimeAccordionHeader"
+        onclick="toggleOvertimeAccordion();"
+        style="cursor: pointer;"
+      >
+        <div class="accordion-left">
+          <i data-lucide="clipboard-pen-line" style="width: 19px; height: 19px;"></i>
+          <span>Overtime</span>
+        </div>
+        <i data-lucide="chevron-up" id="overtimeChevronIcon" style="width: 17px; height: 17px; color: #8CC1E9;"></i>
+      </div>
+
+      <div class="sidebar-subnav-list sub-overtime" id="overtimeSubnavGroup">
+        <!-- Input Data -->
+        <a
+          href="/Overtime/Input"
+          class="sidebar-subnav-item @(isInputQc ? "active" : "")"
+          title="Input Data"
+          style="text-decoration: none;"
+        >
+          <div class="subnav-left">
+            <i data-lucide="clipboard-pen-line" style="width: 18px; height: 18px;"></i>
+            <span>Input Data</span>
+          </div>
+          @if (isInputQc)
+          {
+              <span class="active-dot-indicator"></span>
+          }
+        </a>
+
+        <!-- Rekap Overtime -->
+        <a
+          href="/Overtime/Rekap"
+          class="sidebar-subnav-item @(isRekapData ? "active" : "")"
+          title="Rekap Overtime"
+          style="text-decoration: none;"
+        >
+          <div class="subnav-left">
+            <i data-lucide="file-spreadsheet" style="width: 18px; height: 18px;"></i>
+            <span>Rekap Overtime</span>
+          </div>
+          @if (isRekapData)
+          {
+              <span class="active-dot-indicator"></span>
+          }
+        </a>
+
+        <!-- Master Pekerja -->
+        <a
+          href="/MasterPekerja"
+          class="sidebar-subnav-item @(isMasterPekerja ? "active" : "")"
+          title="Master Pekerja"
+          style="text-decoration: none;"
+        >
+          <div class="subnav-left">
+            <i data-lucide="users" style="width: 18px; height: 18px;"></i>
+            <span>Master Pekerja</span>
+          </div>
+          @if (isMasterPekerja)
+          {
+              <span class="active-dot-indicator"></span>
+          }
+        </a>
+
+        <!-- Riwayat Penginput (Admin Only) -->
+        @if (currentUser?.IsAdmin == true)
+        {
+            <a
+              href="/RiwayatPenginput"
+              class="sidebar-subnav-item @(isRiwayat ? "active" : "")"
+              title="Riwayat Penginput"
+              style="text-decoration: none;"
+            >
+              <div class="subnav-left">
+                <i data-lucide="history" style="width: 18px; height: 18px;"></i>
+                <span>Riwayat Penginput</span>
+              </div>
+              @if (isRiwayat)
+              {
+                  <span class="active-dot-indicator"></span>
+              }
+            </a>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile Footer in Sidebar (Matching lines 170-243 in Sidebar.jsx) -->
+  @if (currentUser != null)
+  {
+      <div
+        id="sidebarUserFooter"
+        style="padding: 14px 16px; border-top: 1px solid rgba(67, 139, 196, 0.2); background: rgba(6, 17, 38, 0.65); display: flex; align-items: center; justify-content: space-between; gap: 10px;"
+      >
+        <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;" id="sidebarUserTextBlock">
+          <div
+            style="width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #00d2ff 100%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 0.85rem; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"
+          >
+            @(string.IsNullOrEmpty(currentUser.Name) ? "U" : currentUser.Name.Substring(0, 1).ToUpper())
+          </div>
+          <div style="display: flex; flexDirection: column; overflow: hidden; line-height: 1.2;">
+            <span style="color: #f8fafc; font-weight: 700; font-size: 0.84rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">
+              @(currentUser.Name == "Administrator Quality" ? "Admin" : currentUser.Name)
+            </span>
+            <span style="font-size: 0.70rem; color: #38bdf8; font-weight: 600; display: block;">
+              @(currentUser.IsAdmin ? "Admin" : $"Karyawan ({currentUser.Npk})")
+            </span>
+          </div>
+        </div>
+      </div>
+  }
+</aside>

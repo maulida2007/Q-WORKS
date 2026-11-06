@@ -1,0 +1,122 @@
+@inject QWorksDbContext Db
+@{
+    var targetSetting = Db.SystemSettings.FirstOrDefault(s => s.Key == "TargetJamOT");
+    double targetVal = 50;
+    if (targetSetting != null && double.TryParse(targetSetting.Value, out double parsed))
+    {
+        targetVal = parsed;
+    }
+
+    var notifs = Db.NotificationItems.OrderByDescending(n => n.CreatedAt).Take(10).ToList();
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+<!-- 1. SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" style="display: none;">
+  <div class="modal-content" onclick="event.stopPropagation();">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i data-lucide="settings" style="width: 20px; height: 20px;"></i>
+        <span>Pengaturan Sistem Q-WORKS Overtime</span>
+      </div>
+      <button class="modal-close-btn" onclick="closeSettingsModal();">
+        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+
+    <form method="post" action="/Settings/UpdateTarget">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="returnUrl" value="@returnUrl" />
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Target Batas Jam Overtime Bulanan</label>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input
+              type="number"
+              step="5"
+              min="10"
+              max="500"
+              name="targetJam"
+              class="form-input"
+              value="@targetVal"
+              style="width: 160px;"
+            />
+            <span style="font-weight: 700; color: #38bdf8;">Jam</span>
+          </div>
+          <span style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px; display: block;">
+            Batas target jam lembur yang ditampilkan pada garis merah putus-putus di grafik bulanan (Default: 50 Jam).
+          </span>
+        </div>
+
+        <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; margin-top: 16px;">
+          <label class="form-label" style="color: #ef4444;">Reset Data Simulasi Pabrik</label>
+          <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">
+            Kembalikan semua metriks, pekerja, dan data lembur ke data awal standar pabrik.
+          </p>
+          <button
+            type="button"
+            class="btn-settings"
+            style="border-color: rgba(239, 68, 68, 0.5); color: #f87171;"
+            onclick="if (confirm('Kembalikan semua data ke kondisi awal pabrik?')) { document.getElementById('resetFactoryForm').submit(); }"
+          >
+            <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i>
+            <span>Reset Data ke Awal Pabrik</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-settings" onclick="closeSettingsModal();">Batal</button>
+        <button type="submit" class="btn-export">
+          <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+          <span>Simpan Perubahan</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<form id="resetFactoryForm" method="post" action="/Settings/ResetFactory" style="display: none;">
+  @Html.AntiForgeryToken()
+  <input type="hidden" name="returnUrl" value="@returnUrl" />
+</form>
+
+<!-- 2. NOTIFICATION MODAL -->
+<div class="modal-overlay" id="notificationModal" style="display: none;">
+  <div class="modal-content" onclick="event.stopPropagation();">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i data-lucide="bell" style="width: 20px; height: 20px;"></i>
+        <span>Pemberitahuan & Alert Lembur</span>
+      </div>
+      <button class="modal-close-btn" onclick="closeNotificationModal();">
+        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto;">
+      @if (notifs.Count == 0)
+      {
+          <div style="text-align: center; color: #94a3b8; padding: 24px 0;">Tidak ada pemberitahuan baru.</div>
+      }
+      else
+      {
+          @foreach (var n in notifs)
+          {
+              string borderCol = n.Type == "danger" ? "#ef4444" : n.Type == "warning" ? "#f59e0b" : "#38bdf8";
+              <div style="background-color: #131f38; border-left: 4px solid @borderCol; padding: 12px 14px; border-radius: 6px; display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-weight: 700; color: #fff; fontSize: 0.88rem;">@n.Title</span>
+                  <span style="font-size: 0.72rem; color: #94a3b8;">@n.TimeAgo</span>
+                </div>
+                <p style="font-size: 0.82rem; color: #cbd5e1; margin: 0;">@n.Message</p>
+              </div>
+          }
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-settings" onclick="closeNotificationModal();">Tutup</button>
+    </div>
+  </div>
+</div>

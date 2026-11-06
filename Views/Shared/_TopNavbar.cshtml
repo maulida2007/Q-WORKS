@@ -1,0 +1,157 @@
+@inject IAuthService AuthService
+@{
+    var currentUser = AuthService.GetCurrentUser();
+    var currentPath = Context.Request.Path.Value?.ToLowerInvariant() ?? "";
+    bool isAdmin = currentUser?.IsAdmin == true;
+    bool isInputQc = currentPath.StartsWith("/overtime/input");
+
+    string pageTitle = ViewData["Title"]?.ToString() ?? "Dashboard Over Time";
+    if (currentPath == "" || currentPath == "/" || currentPath == "/dashboard" || currentPath == "/dashboard/index")
+    {
+        pageTitle = "Dashboard Over Time";
+    }
+    else if (currentPath.Contains("/dashboard/plant/hose"))
+    {
+        pageTitle = "Dashboard Over Time - Plant Hose";
+    }
+    else if (currentPath.Contains("/dashboard/plant/molded"))
+    {
+        pageTitle = "Dashboard Over Time - Plant Molded";
+    }
+    else if (currentPath.Contains("/dashboard/plant/subcont"))
+    {
+        pageTitle = "Dashboard Over Time - Plant Subcont";
+    }
+    else if (currentPath.Contains("/dashboard/plant/mixing") || currentPath.Contains("/dashboard/plant/lab-mixing"))
+    {
+        pageTitle = "Dashboard Over Time - Plant Mixing";
+    }
+    else if (currentPath.Contains("/dashboard/plant/rvi"))
+    {
+        pageTitle = "Dashboard Over Time - Plant RVI";
+    }
+    else if (currentPath.Contains("/dashboard/plant/qre"))
+    {
+        pageTitle = "Dashboard Over Time - Plant QRE";
+    }
+    else if (currentPath.StartsWith("/overtime/input"))
+    {
+        pageTitle = "Input Data QC";
+    }
+    else if (currentPath.StartsWith("/overtime/rekap"))
+    {
+        pageTitle = "Rekap Data QC";
+    }
+    else if (currentPath.StartsWith("/masterpekerja"))
+    {
+        pageTitle = "Master Data Pekerja";
+    }
+    else if (currentPath.StartsWith("/riwayatpenginput"))
+    {
+        pageTitle = "Riwayat & Log Penginput Data QC";
+    }
+}
+
+<header class="top-system-navbar">
+  <!-- Left side: Page Title -->
+  <div class="top-nav-left">
+    <h1 class="top-nav-page-title">@pageTitle</h1>
+  </div>
+
+  <!-- Right side: User Badge, Quick Input, Refresh, Fullscreen, Logout -->
+  <div class="top-nav-right" style="display: flex; align-items: center; gap: 10px;">
+    
+    <!-- User Role Badge -->
+    @if (currentUser != null)
+    {
+        <div
+          style="display: flex; align-items: center; gap: 9px; padding: 5px 12px 5px 6px; borderRadius: 20px; background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(2, 132, 199, 0.1) 100%); border: 1px solid rgba(56, 189, 248, 0.4); box-shadow: 0 2px 8px rgba(0,0,0,0.25);"
+          title="@(isAdmin ? "Role: Admin (Akses Penuh: Tambah, Edit, Hapus)" : "Role: Karyawan (Akses: Hanya Tambah)")"
+        >
+          <!-- Avatar Circle -->
+          <div
+            style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #00d2ff 100%); display: flex; align-items: center; justify-content: center; color: #ffffff; font-weight: 800; font-size: 0.80rem;"
+          >
+            @if (isAdmin)
+            {
+                <i data-lucide="shield-check" style="width: 16px; height: 16px;"></i>
+            }
+            else
+            {
+                <i data-lucide="user" style="width: 15px; height: 15px;"></i>
+            }
+          </div>
+
+          <!-- Name & Role Text -->
+          <div style="display: flex; flex-direction: column; line-height: 1.15;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="color: #f8fafc; font-weight: 800; font-size: 0.82rem;">
+                @currentUser.Name
+              </span>
+              @if (!string.IsNullOrEmpty(currentUser.Npk))
+              {
+                  <span style="color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 700;">
+                    [@currentUser.Npk]
+                  </span>
+              }
+            </div>
+            <span style="font-size: 0.68rem; font-weight: 700; color: #7dd3fc; letter-spacing: 0.02em;">
+              @(isAdmin ? "Admin (Full Access)" : "Karyawan (Input Only)")
+            </span>
+          </div>
+        </div>
+    }
+
+    <!-- Quick Input Data Button -->
+    <a
+      href="@(isInputQc ? "/Dashboard" : "/Overtime/Input")"
+      style="display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; background: @(isInputQc ? "rgba(56, 189, 248, 0.15)" : "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)"); border: @(isInputQc ? "1px solid rgba(56, 189, 248, 0.4)" : "none"); color: #ffffff; font-size: 0.82rem; font-weight: 700; cursor: pointer; text-decoration: none; box-shadow: @(isInputQc ? "none" : "0 2px 10px rgba(2, 132, 199, 0.35)"); transition: all 0.15s ease;"
+      title="@(isInputQc ? "Kembali ke Dashboard" : "Input Data Lembur QC")"
+    >
+      @if (isInputQc)
+      {
+          <i data-lucide="home" style="width: 15px; height: 15px;"></i>
+          <span>Dashboard</span>
+      }
+      else
+      {
+          <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+          <span>Input Data</span>
+      }
+    </a>
+
+    <!-- Refresh Button -->
+    <button
+      type="button"
+      class="top-nav-pill-btn refresh-pill"
+      onclick="handlePageRefresh(this);"
+      title="Refresh Data"
+    >
+      <i data-lucide="rotate-cw" style="width: 15px; height: 15px;" id="refreshIcon"></i>
+      <span>Refresh</span>
+    </button>
+
+    <!-- Fullscreen Button -->
+    <button
+      type="button"
+      class="top-nav-pill-btn fullscreen-pill"
+      onclick="handleToggleFullscreen(this);"
+      title="Layar Penuh"
+    >
+      <i data-lucide="maximize-2" style="width: 15px; height: 15px;" id="fullscreenIcon"></i>
+      <span id="fullscreenText">Fullscreen</span>
+    </button>
+
+    <!-- Logout Button -->
+    <button
+      type="button"
+      class="top-nav-pill-btn"
+      onclick="handleLogoutConfirm();"
+      title="Keluar / Logout Akun"
+      style="border-color: rgba(239, 68, 68, 0.4); color: #f87171; background: rgba(239, 68, 68, 0.12); border-style: solid; border-width: 1px;"
+    >
+      <i data-lucide="log-out" style="width: 15px; height: 15px; color: #f87171;"></i>
+      <span>Keluar</span>
+    </button>
+  </div>
+</header>

@@ -1,0 +1,408 @@
+@model RekapOvertimeViewModel
+@inject IAuthService AuthService
+@{
+    ViewData["Title"] = "Rekap Data QC";
+    Layout = "_Layout";
+    var currentUser = AuthService.GetCurrentUser();
+    bool isAdmin = currentUser?.IsAdmin == true;
+
+    // Helper for plant badge style
+    Func<string, (string bg, string text, string border)> getPlantBadgeStyle = (plantName) => {
+        var p = (plantName ?? "").ToLower();
+        if (p.Contains("hose")) return ("rgba(244, 63, 94, 0.15)", "#fb7185", "1px solid rgba(244, 63, 94, 0.35)");
+        if (p.Contains("molded")) return ("rgba(56, 189, 248, 0.15)", "#38bdf8", "1px solid rgba(56, 189, 248, 0.35)");
+        if (p.Contains("subcont")) return ("rgba(16, 185, 129, 0.15)", "#34d399", "1px solid rgba(16, 185, 129, 0.35)");
+        if (p.Contains("lab") || p.Contains("mixing")) return ("rgba(245, 158, 11, 0.15)", "#fbbf24", "1px solid rgba(245, 158, 11, 0.35)");
+        if (p.Contains("rvi")) return ("rgba(168, 85, 247, 0.15)", "#c084fc", "1px solid rgba(168, 85, 247, 0.35)");
+        if (p.Contains("qre")) return ("rgba(6, 182, 212, 0.15)", "#22d3ee", "1px solid rgba(6, 182, 212, 0.35)");
+        return ("rgba(148, 163, 184, 0.15)", "#cbd5e1", "1px solid rgba(148, 163, 184, 0.3)");
+    };
+}
+
+<div class="page-content" style="max-width: 1600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
+
+  <!-- 1. TOP EXECUTIVE HERO BANNER -->
+  <div class="dashboard-hero-mockup-card" style="margin-bottom: 0;">
+    <div class="hero-mockup-left">
+      <div class="hero-glowing-icon">
+        <i data-lucide="file-spreadsheet" style="width: 22px; height: 22px; color: #ffffff;"></i>
+      </div>
+      <div class="hero-text-block">
+        <span class="hero-dept-tag">QUALITY CONTROL</span>
+        <h1 class="hero-main-title">Rekapitulasi Data Lembur QC</h1>
+        <span class="hero-desc">
+          Laporan rekapitulasi data lembur seluruh plant terintegrasi dengan filter dinamis dan export data.
+        </span>
+      </div>
+    </div>
+
+    <!-- Live Status Right -->
+    <div class="hero-live-status-card">
+      <div class="hero-live-clock-icon">
+        <i data-lucide="clock" style="width: 15px; height: 15px; color: #38bdf8;"></i>
+      </div>
+      <div class="hero-status-texts">
+        <span class="hero-status-label">Waktu Sistem</span>
+        <span class="hero-status-time" id="rekapLiveClock">--</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. TOP 4 METRIC KPI CARDS -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+    <!-- Card 1: TOTAL RECORD DATA -->
+    <div style="background: rgba(9, 24, 52, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+      <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(14, 165, 233, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+        <i data-lucide="file-spreadsheet" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total Data Overtime</div>
+        <div style="font-size: 1.45rem; font-weight: 800; color: #f8fafc; line-height: 1.2;">
+          @Model.TotalRecords <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">Data</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: TOTAL JAM LEMBUR -->
+    <div style="background: rgba(9, 24, 52, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+      <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); display: flex; align-items: center; justify-content: center; color: #fbbf24;">
+        <i data-lucide="clock" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total Jam Lembur</div>
+        <div style="font-size: 1.45rem; font-weight: 800; color: #fbbf24; line-height: 1.2;">
+          @Model.TotalJamOvertime.ToString("N1") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">Jam</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: TOTAL TUL -->
+    <div style="background: rgba(9, 24, 52, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+      <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.25); display: flex; align-items: center; justify-content: center; color: #34d399;">
+        <i data-lucide="layers" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total TUL</div>
+        <div style="font-size: 1.45rem; font-weight: 800; color: #34d399; line-height: 1.2;">
+          @Model.TotalTUL.ToString("N1") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">TUL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: TOTAL KARYAWAN -->
+    <div style="background: rgba(9, 24, 52, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+      <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); display: flex; align-items: center; justify-content: center; color: #c084fc;">
+        <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total Karyawan</div>
+        <div style="font-size: 1.45rem; font-weight: 800; color: #c084fc; line-height: 1.2;">
+          @Model.UniqueEmployees <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">Orang</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. FILTER PARAMETER CARD -->
+  <div class="filter-parameter-mockup-card" style="margin-bottom: 0;">
+    <div class="filter-parameter-top-row">
+      <div class="filter-parameter-title-group">
+        <i data-lucide="filter" style="width: 16px; height: 16px; color: #8CC1E9;"></i>
+        <span class="filter-param-header-text">Filter Parameter</span>
+        <span class="filter-live-pill">Live Filter</span>
+      </div>
+      <div class="filter-parameter-actions">
+        <a href="/Overtime/Rekap" class="btn-filter-reset">
+          <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i>
+          <span>Reset</span>
+        </a>
+        @if (isAdmin)
+        {
+          <a href="/Overtime/ExportExcel@(Context.Request.QueryString)" class="btn-filter-export" title="Unduh file Excel Rekap Overtime">
+            <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+            <span>Export Excel</span>
+          </a>
+        }
+      </div>
+    </div>
+
+    <!-- Filter Form Grid -->
+    <form id="rekapFilterForm" method="get" action="/Overtime/Rekap">
+      <div class="filter-boxes-grid">
+        <!-- 1. Bulan -->
+        <div class="filter-param-box">
+          <div class="filter-param-box-left">
+            <i data-lucide="calendar" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
+            <div class="filter-param-box-texts">
+              <span class="filter-param-box-label">Bulan</span>
+              <select name="months" id="rekapMonths" class="filter-box-native-select" onchange="onFilterMonthChange(this, 'rekapDays');">
+                <option value="">Semua Bulan</option>
+                @foreach (var m in Model.MonthList)
+                {
+                  <option value="@m" selected="@(Model.SelectedMonths.Contains(m))">@m</option>
+                }
+              </select>
+            </div>
+          </div>
+          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+        </div>
+
+        <!-- 2. Tanggal -->
+        <div class="filter-param-box">
+          <div class="filter-param-box-left">
+            <i data-lucide="calendar" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
+            <div class="filter-param-box-texts">
+              <span class="filter-param-box-label">Tanggal</span>
+              <select name="days" id="rekapDays" class="filter-box-native-select" onchange="this.form.submit();">
+                <option value="">Semua Tanggal</option>
+                @foreach (var s in Model.DayList)
+                {
+                  <option value="@s" selected="@(Model.SelectedDays.Contains(s))">Tanggal @s</option>
+                }
+              </select>
+            </div>
+          </div>
+          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+        </div>
+
+        <!-- 3. Shift -->
+        <div class="filter-param-box">
+          <div class="filter-param-box-left">
+            <i data-lucide="clock" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
+            <div class="filter-param-box-texts">
+              <span class="filter-param-box-label">Shift</span>
+              <select name="shifts" class="filter-box-native-select" onchange="this.form.submit();">
+                <option value="">Semua Shift</option>
+                @foreach (var s in Model.ShiftList)
+                {
+                  <option value="@s" selected="@(Model.SelectedShifts.Contains(s))">@s</option>
+                }
+              </select>
+            </div>
+          </div>
+          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+        </div>
+
+        <!-- 4. Plant -->
+        <div class="filter-param-box">
+          <div class="filter-param-box-left">
+            <i data-lucide="building-2" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
+            <div class="filter-param-box-texts">
+              <span class="filter-param-box-label">Plant</span>
+              <select name="plants" class="filter-box-native-select" onchange="this.form.submit();">
+                <option value="">Semua Plant</option>
+                @foreach (var p in Model.PlantList)
+                {
+                  <option value="@p" selected="@(Model.SelectedPlants.Contains(p))">@p</option>
+                }
+              </select>
+            </div>
+          </div>
+          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+        </div>
+
+        <!-- 5. Karyawan -->
+        <div class="filter-param-box">
+          <div class="filter-param-box-left">
+            <i data-lucide="users" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
+            <div class="filter-param-box-texts">
+              <span class="filter-param-box-label">Karyawan</span>
+              <select name="employees" class="filter-box-native-select" onchange="this.form.submit();">
+                <option value="">Semua Karyawan</option>
+                @foreach (var emp in Model.EmployeeList)
+                {
+                  <option value="@emp.Npk" selected="@(Model.SelectedEmployees.Contains(emp.Npk))">@emp.Name (@emp.Npk)</option>
+                }
+              </select>
+            </div>
+          </div>
+          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+        </div>
+      </div>
+
+      <!-- Universal Search Bar -->
+      <div
+        style="
+          margin-top: 14px;
+          display: flex;
+          align-items: center;
+          background: rgba(10, 22, 45, 0.85);
+          border: 1.5px solid rgba(67, 139, 196, 0.35);
+          border-radius: 10px;
+          padding: 0 14px;
+          height: 42px;
+        "
+      >
+        <i data-lucide="search" style="width: 16px; height: 16px; color: #8CC1E9; margin-right: 10px; flex-shrink: 0;"></i>
+        <input
+          type="text"
+          name="search"
+          value="@Model.SearchKeyword"
+          placeholder="Cari NPK, nama, plant, shift, tanggal..."
+          style="background: transparent; border: none; color: #ffffff; font-size: 0.88rem; outline: none; width: 100%;"
+        />
+        @if (!string.IsNullOrEmpty(Model.SearchKeyword))
+        {
+          <a href="/Overtime/Rekap" style="color: #8CC1E9; display: flex; align-items: center; text-decoration: none;">
+            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          </a>
+        }
+      </div>
+    </form>
+  </div>
+
+  <!-- 4. MAIN DATA RECORD TABLE -->
+  <div
+    style="
+      background: linear-gradient(145deg, #091a38 0%, #0d2654 100%);
+      border: 1.5px solid rgba(67, 139, 196, 0.35);
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+    "
+  >
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: separate; border-spacing: 0; fontSize: 0.88rem;">
+        <thead>
+          <tr style="background: linear-gradient(180deg, #091a38 0%, #071226 100%); border-bottom: 2px solid rgba(56, 189, 248, 0.25);">
+            <th style="width: 6%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">No.</th>
+            <th style="width: 15%; text-align: left; padding: 14px 12px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Tanggal</th>
+            <th style="width: 16%; text-align: center; padding: 14px 10px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Plant</th>
+            <th style="width: 26%; text-align: left; padding: 14px 12px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Karyawan & NPK</th>
+            <th style="width: 14%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Jam Lembur</th>
+            <th style="width: 11%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Total TUL</th>
+            @if (isAdmin)
+            {
+              <th style="width: 12%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">Aksi</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @if (Model.Records.Count == 0)
+          {
+            <tr>
+              <td colspan="@(isAdmin ? 7 : 6)" style="text-align: center; padding: 50px 20px; color: #8ca8cf;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                  <i data-lucide="file-spreadsheet" style="width: 40px; height: 40px; color: #64748b;"></i>
+                  <span style="font-size: 0.95rem; font-weight: 600;">
+                    Tidak ada data record lembur yang cocok dengan kriteria filter.
+                  </span>
+                  <a href="/Overtime/Rekap" style="background-color: rgba(0, 110, 220, 0.2); border: 1px solid #38bdf8; color: #38bdf8; padding: 6px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; margin-top: 6px; text-decoration: none;">
+                    Reset Semua Filter
+                  </a>
+                </div>
+              </td>
+            </tr>
+          }
+          else
+          {
+            int idx = 1;
+            foreach (var item in Model.Records)
+            {
+              var plantStyle = getPlantBadgeStyle(item.Plant);
+              string initial = string.IsNullOrEmpty(item.UserName) ? "U" : item.UserName.Substring(0, 1).ToUpper();
+
+              <tr
+                style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); background-color: @(idx % 2 == 1 ? "rgba(9, 26, 56, 0.4)" : "rgba(13, 38, 84, 0.25)"); transition: background 0.15s ease;"
+                onmouseenter="this.style.backgroundColor='rgba(14, 165, 233, 0.12)';"
+                onmouseleave="this.style.backgroundColor='@(idx % 2 == 1 ? "rgba(9, 26, 56, 0.4)" : "rgba(13, 38, 84, 0.25)")';"
+              >
+                <!-- 1. No. -->
+                <td style="text-align: center; padding: 12px 8px;">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #94a3b8; font-weight: 700; font-size: 0.80rem;">
+                    @idx
+                  </span>
+                </td>
+
+                <!-- 2. Tanggal -->
+                <td style="white-space: nowrap; padding: 12px 12px;">
+                  <div style="display: inline-flex; align-items: center; gap: 7px; color: #f1f5f9; font-size: 0.86rem; font-weight: 700;">
+                    <i data-lucide="calendar" style="width: 14px; height: 14px; color: #00d2ff;"></i>
+                    <span>@item.WorkDate.ToString("yyyy-MM-dd")</span>
+                  </div>
+                  <div style="font-size: 0.72rem; color: #8CC1E9; margin-top: 2px;">
+                    @item.JamWaktu
+                  </div>
+                </td>
+
+                <!-- 3. Plant -->
+                <td style="text-align: center; padding: 12px 10px;">
+                  <span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; background-color: @plantStyle.bg; color: @plantStyle.text; border: @plantStyle.border; white-space: nowrap;">
+                    <i data-lucide="building-2" style="width: 12px; height: 12px;"></i>
+                    @item.Plant
+                  </span>
+                </td>
+
+                <!-- 4. Karyawan & NPK -->
+                <td style="padding: 12px 12px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, rgba(0, 136, 255, 0.25) 0%, rgba(2, 132, 199, 0.15) 100%); border: 1px solid rgba(0, 210, 255, 0.35); color: #FFF8E7; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.84rem; flex-shrink: 0;">
+                      @initial
+                    </div>
+                    <div>
+                      <div style="font-size: 0.88rem; font-weight: 700; color: #FFF8E7;">@item.UserName</div>
+                      <div style="font-size: 0.76rem; color: #00d2ff; font-family: 'JetBrains Mono', monospace;">
+                        @item.UserNpk • <span style="color: #94a3b8;">@item.ShiftName</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- 5. Jam Lembur -->
+                <td style="text-align: center; padding: 12px 8px;">
+                  <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.92rem; font-weight: 800; color: #FFF8E7;">
+                    <i data-lucide="clock" style="width: 14px; height: 14px; color: #00d2ff;"></i>
+                    @item.JamOvertime.ToString("N1") <small style="color: #8CC1E9; font-size: 0.76rem;">Jam</small>
+                  </span>
+                </td>
+
+                <!-- 6. Total TUL -->
+                <td style="text-align: center; padding: 12px 8px;">
+                  <span style="display: inline-block; padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 0.88rem; background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24;">
+                    @item.TotalTul.ToString("N1") TUL
+                  </span>
+                </td>
+
+                <!-- 7. Aksi -->
+                @if (isAdmin)
+                {
+                  <td style="text-align: center; padding: 12px 8px;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                      <form method="post" action="/Overtime/Delete/@item.Id" onsubmit="return confirm('Apakah Anda yakin ingin menghapus catatan lembur ini?');" style="margin: 0;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" style="width: 28px; height: 28px; border-radius: 6px; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fb7185; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;" title="Hapus record">
+                          <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                }
+              </tr>
+              idx++;
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+@section Scripts {
+<script>
+  function updateRekapLiveClock() {
+    var now = new Date();
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    var d = String(now.getDate()).padStart(2, '0');
+    var m = months[now.getMonth()];
+    var y = now.getFullYear();
+    var h = String(now.getHours()).padStart(2, '0');
+    var min = String(now.getMinutes()).padStart(2, '0');
+    var s = String(now.getSeconds()).padStart(2, '0');
+    var el = document.getElementById('rekapLiveClock');
+    if (el) el.innerText = d + ' ' + m + ' ' + y + '  ' + h + ':' + min + ':' + s;
+  }
+  updateRekapLiveClock();
+  setInterval(updateRekapLiveClock, 1000);
+</script>
+}

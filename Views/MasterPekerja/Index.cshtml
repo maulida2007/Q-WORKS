@@ -1,0 +1,528 @@
+@model MasterPekerjaViewModel
+@inject IAuthService AuthService
+@{
+    ViewData["Title"] = "Master Data Pekerja QC";
+    Layout = "_Layout";
+    var currentUser = AuthService.GetCurrentUser();
+    bool isAdmin = currentUser?.IsAdmin == true;
+
+    // Plant Badge Style Helper
+    Func<string, (string bg, string text, string border)> getPlantBadgeStyle = (plantName) => {
+        var p = (plantName ?? "").ToLower();
+        if (p.Contains("hose")) return ("rgba(244, 63, 94, 0.15)", "#fb7185", "1px solid rgba(244, 63, 94, 0.35)");
+        if (p.Contains("molded")) return ("rgba(56, 189, 248, 0.15)", "#38bdf8", "1px solid rgba(56, 189, 248, 0.35)");
+        if (p.Contains("subcont")) return ("rgba(16, 185, 129, 0.15)", "#34d399", "1px solid rgba(16, 185, 129, 0.35)");
+        if (p.Contains("lab") || p.Contains("mixing")) return ("rgba(245, 158, 11, 0.15)", "#fbbf24", "1px solid rgba(245, 158, 11, 0.35)");
+        if (p.Contains("rvi")) return ("rgba(168, 85, 247, 0.15)", "#c084fc", "1px solid rgba(168, 85, 247, 0.35)");
+        if (p.Contains("qre")) return ("rgba(6, 182, 212, 0.15)", "#22d3ee", "1px solid rgba(6, 182, 212, 0.35)");
+        return ("rgba(148, 163, 184, 0.15)", "#cbd5e1", "1px solid rgba(148, 163, 184, 0.3)");
+    };
+}
+
+<div class="page-content" style="max-width: 1600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
+
+  <!-- 1. TOP EXECUTIVE HERO BANNER -->
+  <div class="dashboard-hero-mockup-card" style="margin-bottom: 0;">
+    <div class="hero-mockup-left">
+      <div class="hero-glowing-icon">
+        <i data-lucide="users" style="width: 22px; height: 22px; color: #ffffff;"></i>
+      </div>
+      <div class="hero-text-block">
+        <span class="hero-dept-tag">QUALITY CONTROL</span>
+        <h1 class="hero-main-title">Master Data Pekerja QC</h1>
+        <span class="hero-desc">
+          Manajemen data anggota seluruh plant QC, tambah data, serta ekspor & impor massal Excel.
+        </span>
+      </div>
+    </div>
+
+    <!-- Live Status Right -->
+    <div class="hero-live-status-card">
+      <div class="hero-live-clock-icon">
+        <i data-lucide="clock" style="width: 15px; height: 15px; color: #38bdf8;"></i>
+      </div>
+      <div class="hero-status-texts">
+        <span class="hero-status-label">Waktu Sistem</span>
+        <span class="hero-status-time" id="masterLiveClock">--</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ACTION TOOLBAR (HANYA UNTUK ADMIN) -->
+  @if (isAdmin)
+  {
+    <div class="master-actions-toolbar" style="margin-bottom: 0; display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="/MasterPekerja/DownloadTemplate" class="btn-master-action" title="Unduh format file Excel untuk input data pekerja" style="text-decoration: none;">
+        <i data-lucide="file-spreadsheet" style="width: 16px; height: 16px; color: #8CC1E9;"></i>
+        <span>Template Excel</span>
+      </a>
+
+      <button type="button" onclick="openImportModal();" class="btn-master-action" title="Impor file Excel atau CSV">
+        <i data-lucide="upload-cloud" style="width: 16px; height: 16px; color: #8CC1E9;"></i>
+        <span>Impor Excel (.CSV)</span>
+      </button>
+
+      <a href="/MasterPekerja/ExportExcel?plant=@Model.SelectedPlant" class="btn-master-action" title="Unduh seluruh data pekerja" style="text-decoration: none;">
+        <i data-lucide="download" style="width: 16px; height: 16px; color: #8CC1E9;"></i>
+        <span>Ekspor Excel (.xlsx)</span>
+      </a>
+
+      <button type="button" onclick="openAddModal();" class="btn-master-primary" title="Tambah anggota baru secara manual">
+        <i data-lucide="user-plus" style="width: 16px; height: 16px;"></i>
+        <span>Tambah Anggota Manual</span>
+      </button>
+    </div>
+  }
+
+  <!-- 3. SEARCH & FILTER TASKBAR -->
+  <div
+    class="master-search-taskbar-card"
+    style="
+      background: linear-gradient(135deg, rgba(8, 26, 58, 0.75) 0%, rgba(5, 17, 40, 0.9) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      border-radius: 14px;
+      padding: 14px 18px;
+      margin-bottom: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(16px);
+    "
+  >
+    <!-- Left: Search Form Box -->
+    <form method="get" action="/MasterPekerja" style="display: flex; align-items: center; gap: 12px; flex: 1 1 360px;">
+      <input type="hidden" name="plant" value="@Model.SelectedPlant" />
+      <div
+        style="
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(2, 132, 199, 0.1) 100%);
+          border: 1px solid rgba(56, 189, 248, 0.35);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        "
+      >
+        <i data-lucide="search" style="width: 19px; height: 19px; color: #38bdf8;"></i>
+      </div>
+
+      <div style="position: relative; width: 100%;">
+        <input
+          type="text"
+          name="search"
+          value="@Model.SearchKeyword"
+          placeholder="Cari nama karyawan, NPK, plant, atau shift..."
+          style="
+            width: 100%;
+            padding: 11px 38px 11px 16px;
+            border-radius: 10px;
+            background: rgba(9, 26, 56, 0.6);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: #f8fafc;
+            font-size: 0.90rem;
+            outline: none;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+          "
+        />
+        @if (!string.IsNullOrEmpty(Model.SearchKeyword))
+        {
+          <a
+            href="/MasterPekerja?plant=@Model.SelectedPlant"
+            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; text-decoration: none;"
+          >
+            <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+          </a>
+        }
+      </div>
+    </form>
+
+    <!-- Right: Quick Plant Selector + Counter + Reset -->
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <!-- Quick Plant Selector -->
+      <form method="get" action="/MasterPekerja" style="position: relative;">
+        <input type="hidden" name="search" value="@Model.SearchKeyword" />
+        <select
+          name="plant"
+          onchange="this.form.submit();"
+          style="
+            padding: 9px 32px 9px 12px;
+            border-radius: 8px;
+            background: rgba(9, 26, 56, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: #e2e8f0;
+            font-size: 0.84rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+          "
+        >
+          <option value="ALL" selected="@(Model.SelectedPlant == "ALL")">Semua Plant</option>
+          @foreach (var p in Model.AllowedPlants)
+          {
+            <option value="@p" selected="@(Model.SelectedPlant == p)">@p</option>
+          }
+        </select>
+        <i data-lucide="building-2" style="width: 13px; height: 13px; color: #38bdf8; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
+      </form>
+
+      <!-- Counter Badge -->
+      <div
+        style="
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 8px 14px;
+          border-radius: 8px;
+          background-color: rgba(14, 165, 233, 0.12);
+          border: 1px solid rgba(56, 189, 248, 0.3);
+          color: #38bdf8;
+          font-size: 0.84rem;
+          font-weight: 700;
+          white-space: nowrap;
+        "
+      >
+        <i data-lucide="users" style="width: 14px; height: 14px; color: #38bdf8;"></i>
+        <span>@Model.TotalEmployees Pekerja</span>
+      </div>
+
+      <!-- Reset Button -->
+      @if (!string.IsNullOrEmpty(Model.SearchKeyword) || Model.SelectedPlant != "ALL")
+      {
+        <a
+          href="/MasterPekerja"
+          style="
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background-color: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #f87171;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+          "
+          title="Reset filter dan pencarian"
+        >
+          <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
+          <span>Reset</span>
+        </a>
+      }
+    </div>
+  </div>
+
+  <!-- 4. MASTER TABLE CARD -->
+  <div class="master-table-card">
+    <!-- Table Header -->
+    <div class="master-table-card-header">
+      <div class="master-table-title-left">
+        <div class="master-table-icon-box">
+          <i data-lucide="users" style="width: 17px; height: 17px; color: #8CC1E9;"></i>
+        </div>
+        <span class="master-table-title-text">
+          Daftar Anggota & Pekerja (@Model.Employees.Count Ditemukan)
+        </span>
+      </div>
+      <span class="master-table-subtext">
+        Data tersinkron otomatis dengan form input lembur dan rekapitulasi QC
+      </span>
+    </div>
+
+    <!-- Table Wrapper -->
+    <div class="master-table-wrapper">
+      <table style="width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.88rem;">
+        <thead>
+          <tr style="background: linear-gradient(180deg, #091a38 0%, #071226 100%); border-bottom: 2px solid rgba(56, 189, 248, 0.25);">
+            <th style="width: 6%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">NO</th>
+            <th style="width: 14%; text-align: center; padding: 14px 10px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">NPK</th>
+            <th style="width: 36%; text-align: left; padding: 14px 14px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">NAMA KARYAWAN</th>
+            <th style="width: 28%; text-align: center; padding: 14px 10px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">PLANT PENUGASAN</th>
+            @if (isAdmin)
+            {
+              <th style="width: 16%; text-align: center; padding: 14px 8px; color: #94a3b8; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">AKSI</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @if (Model.Employees.Count == 0)
+          {
+            <tr>
+              <td colspan="@(isAdmin ? 5 : 4)" style="padding: 48px 20px; text-align: center; color: #8ca8cf;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                  <i data-lucide="users" style="width: 36px; height: 36px; color: #438BC4;"></i>
+                  <div style="font-size: 15px; font-weight: 700; color: #f8fafc;">Tidak ada data pekerja yang cocok</div>
+                  <div style="font-size: 13px; color: #8ca8cf;">Coba ubah filter atau tambahkan anggota baru.</div>
+                </div>
+              </td>
+            </tr>
+          }
+          else
+          {
+            int startIdx = (Model.CurrentPage - 1) * 20;
+            int idx = 1;
+            foreach (var emp in Model.Employees)
+            {
+              var plantStyle = getPlantBadgeStyle(emp.Plant);
+              string initial = string.IsNullOrEmpty(emp.Name) ? "P" : emp.Name.Substring(0, 1).ToUpper();
+
+              <tr
+                style="border-bottom: 1px solid rgba(255, 255, 255, 0.06); background-color: @(idx % 2 == 1 ? "rgba(9, 26, 56, 0.4)" : "rgba(13, 38, 84, 0.25)"); transition: background 0.15s ease;"
+                onmouseenter="this.style.backgroundColor='rgba(14, 165, 233, 0.12)';"
+                onmouseleave="this.style.backgroundColor='@(idx % 2 == 1 ? "rgba(9, 26, 56, 0.4)" : "rgba(13, 38, 84, 0.25)")';"
+              >
+                <!-- NO -->
+                <td style="text-align: center; padding: 12px 8px;">
+                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #94a3b8; font-weight: 700; font-size: 0.80rem;">
+                    @(startIdx + idx)
+                  </span>
+                </td>
+
+                <!-- NPK -->
+                <td style="text-align: center; padding: 12px 10px;">
+                  <span style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 6px; background-color: rgba(14, 165, 233, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.84rem; letter-spacing: 0.04em;">
+                    @emp.Npk
+                  </span>
+                </td>
+
+                <!-- NAMA KARYAWAN -->
+                <td style="padding: 12px 14px;">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, rgba(0, 136, 255, 0.25) 0%, rgba(2, 132, 199, 0.15) 100%); border: 1px solid rgba(0, 210, 255, 0.35); color: #FFF8E7; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.84rem; flex-shrink: 0;">
+                      @initial
+                    </div>
+                    <span style="font-weight: 700; color: #FFF8E7; font-size: 0.92rem;">
+                      @emp.Name
+                    </span>
+                  </div>
+                </td>
+
+                <!-- PLANT PENUGASAN -->
+                <td style="text-align: center; padding: 12px 10px;">
+                  <span style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; background-color: @plantStyle.bg; color: @plantStyle.text; border: @plantStyle.border;">
+                    <i data-lucide="building-2" style="width: 12px; height: 12px;"></i>
+                    @emp.Plant
+                  </span>
+                </td>
+
+                <!-- AKSI -->
+                @if (isAdmin)
+                {
+                  <td style="text-align: center; padding: 12px 8px;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                      <button
+                        type="button"
+                        onclick="openEditModal('@emp.Npk', '@emp.Name', '@emp.Plant');"
+                        style="width: 28px; height: 28px; border-radius: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+                        title="Edit pekerja"
+                      >
+                        <i data-lucide="pencil" style="width: 13px; height: 13px;"></i>
+                      </button>
+
+                      <form method="post" action="/MasterPekerja/Delete/@emp.Npk" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pekerja @emp.Name (@emp.Npk)?');" style="margin: 0;">
+                        @Html.AntiForgeryToken()
+                        <button
+                          type="submit"
+                          style="width: 28px; height: 28px; border-radius: 6px; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fb7185; display: flex; align-items: center; justify-content: center; cursor: pointer;"
+                          title="Hapus pekerja"
+                        >
+                          <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                }
+              </tr>
+              idx++;
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    @if (Model.TotalPages > 1)
+    {
+      <div class="master-pagination-footer" style="padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+        <span style="font-size: 0.82rem; color: #8CC1E9;">
+          Halaman @Model.CurrentPage dari @Model.TotalPages
+        </span>
+        <div style="display: flex; gap: 6px;">
+          @if (Model.CurrentPage > 1)
+          {
+            <a href="/MasterPekerja?page=@(Model.CurrentPage - 1)&plant=@Model.SelectedPlant&search=@Model.SearchKeyword" class="pagination-nav-btn" style="text-decoration: none;">&lt;</a>
+          }
+          @for (int p = 1; p <= Model.TotalPages; p++)
+          {
+            <a href="/MasterPekerja?page=@p&plant=@Model.SelectedPlant&search=@Model.SearchKeyword" class="pagination-nav-btn @(Model.CurrentPage == p ? "active" : "")" style="text-decoration: none;">@p</a>
+          }
+          @if (Model.CurrentPage < Model.TotalPages)
+          {
+            <a href="/MasterPekerja?page=@(Model.CurrentPage + 1)&plant=@Model.SelectedPlant&search=@Model.SearchKeyword" class="pagination-nav-btn" style="text-decoration: none;">&gt;</a>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+</div>
+
+<!-- Modal Tambah / Edit Pekerja -->
+<div id="modalAddEditWorker" class="modal-backdrop-custom" style="display: none; position: fixed; inset: 0; background: rgba(5, 12, 24, 0.85); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #091a38 0%, #0d2654 100%); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 16px; padding: 24px 28px; max-width: 460px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+      <h3 id="modalWorkerTitle" style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #FFF8E7; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="user-plus" style="width: 18px; height: 18px; color: #00d2ff;"></i>
+        <span>Tambah Pekerja Baru</span>
+      </h3>
+      <button type="button" onclick="closeWorkerModal();" style="background: none; border: none; color: #94a3b8; cursor: pointer;">
+        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+
+    <form id="workerForm" method="post" action="/MasterPekerja/Add">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="isEdit" id="workerIsEdit" value="false" />
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">NPK</label>
+          <input type="text" name="npk" id="workerNpk" required placeholder="Contoh: 1747" style="width: 100%; height: 42px; padding: 0 14px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-family: 'JetBrains Mono', monospace; font-weight: 700; box-sizing: border-box;" />
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">Nama Lengkap</label>
+          <input type="text" name="name" id="workerName" required placeholder="Nama lengkap pekerja" style="width: 100%; height: 42px; padding: 0 14px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-weight: 700; box-sizing: border-box;" />
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">Plant Penugasan</label>
+          <select name="plant" id="workerPlant" required style="width: 100%; height: 42px; padding: 0 14px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-weight: 700; box-sizing: border-box;">
+            @foreach (var p in Model.AllowedPlants)
+            {
+              <option value="@p">@p</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <button type="button" onclick="closeWorkerModal();" style="padding: 9px 18px; border-radius: 8px; background: transparent; border: 1px solid rgba(67, 139, 196, 0.35); color: #8CC1E9; font-weight: 600; cursor: pointer;">
+          Batal
+        </button>
+        <button type="submit" style="padding: 9px 20px; border-radius: 8px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: none; color: #ffffff; font-weight: 700; cursor: pointer;">
+          Simpan Data
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Impor Excel -->
+<div id="modalImportExcel" class="modal-backdrop-custom" style="display: none; position: fixed; inset: 0; background: rgba(5, 12, 24, 0.85); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #091a38 0%, #0d2654 100%); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 16px; padding: 24px 28px; max-width: 480px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+      <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #FFF8E7; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="upload-cloud" style="width: 18px; height: 18px; color: #00d2ff;"></i>
+        <span>Impor Data Pekerja Excel</span>
+      </h3>
+      <button type="button" onclick="closeImportModal();" style="background: none; border: none; color: #94a3b8; cursor: pointer;">
+        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+
+    <form method="post" action="/MasterPekerja/ImportExcel" enctype="multipart/form-data">
+      @Html.AntiForgeryToken()
+      <p style="font-size: 0.85rem; color: #8CC1E9; margin: 0 0 16px;">
+        Pilih file Excel (.xlsx / .xls) atau CSV sesuai format template (Kolom: NO, NPK, NAMA LENGKAP, PLANT).
+      </p>
+
+      <div style="border: 2px dashed rgba(56, 189, 248, 0.35); border-radius: 12px; padding: 24px; text-align: center; background: rgba(5, 14, 30, 0.5); margin-bottom: 20px;">
+        <i data-lucide="file-spreadsheet" style="width: 36px; height: 36px; color: #38bdf8; margin-bottom: 10px;"></i>
+        <input type="file" name="file" accept=".xlsx,.xls,.csv" required style="width: 100%; color: #8CC1E9;" />
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="/MasterPekerja/DownloadTemplate" style="font-size: 0.82rem; color: #00d2ff; text-decoration: none;">
+          Unduh Template Format
+        </a>
+        <div style="display: flex; gap: 10px;">
+          <button type="button" onclick="closeImportModal();" style="padding: 8px 16px; border-radius: 8px; background: transparent; border: 1px solid rgba(67, 139, 196, 0.35); color: #8CC1E9; font-weight: 600; cursor: pointer;">
+            Batal
+          </button>
+          <button type="submit" style="padding: 8px 18px; border-radius: 8px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: none; color: #ffffff; font-weight: 700; cursor: pointer;">
+            Mulai Impor
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+  function updateMasterLiveClock() {
+    var now = new Date();
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    var d = String(now.getDate()).padStart(2, '0');
+    var m = months[now.getMonth()];
+    var y = now.getFullYear();
+    var h = String(now.getHours()).padStart(2, '0');
+    var min = String(now.getMinutes()).padStart(2, '0');
+    var s = String(now.getSeconds()).padStart(2, '0');
+    var el = document.getElementById('masterLiveClock');
+    if (el) el.innerText = d + ' ' + m + ' ' + y + '  ' + h + ':' + min + ':' + s;
+  }
+  updateMasterLiveClock();
+  setInterval(updateMasterLiveClock, 1000);
+
+  function openAddModal() {
+    document.getElementById('modalWorkerTitle').innerHTML = '<i data-lucide="user-plus" style="width: 18px; height: 18px; color: #00d2ff;"></i><span>Tambah Pekerja Baru</span>';
+    document.getElementById('workerIsEdit').value = 'false';
+    document.getElementById('workerNpk').readOnly = false;
+    document.getElementById('workerNpk').value = '';
+    document.getElementById('workerName').value = '';
+    document.getElementById('modalAddEditWorker').style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function openEditModal(npk, name, plant) {
+    document.getElementById('modalWorkerTitle').innerHTML = '<i data-lucide="pencil" style="width: 18px; height: 18px; color: #00d2ff;"></i><span>Edit Data Pekerja</span>';
+    document.getElementById('workerIsEdit').value = 'true';
+    document.getElementById('workerNpk').value = npk;
+    document.getElementById('workerNpk').readOnly = true;
+    document.getElementById('workerName').value = name;
+    
+    var sel = document.getElementById('workerPlant');
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === plant) {
+        sel.selectedIndex = i;
+        break;
+      }
+    }
+    document.getElementById('modalAddEditWorker').style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function closeWorkerModal() {
+    document.getElementById('modalAddEditWorker').style.display = 'none';
+  }
+
+  function openImportModal() {
+    document.getElementById('modalImportExcel').style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function closeImportModal() {
+    document.getElementById('modalImportExcel').style.display = 'none';
+  }
+</script>
+}

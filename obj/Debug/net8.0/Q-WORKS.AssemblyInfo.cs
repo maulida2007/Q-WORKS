@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Q-WORKS")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f7a2b0b4e7ef86697a6d453450d832001a0a381e")]
 [assembly: System.Reflection.AssemblyProductAttribute("Q-WORKS")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Q-WORKS")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,0 +1,379 @@
+@model RiwayatPenginputViewModel
+@inject IAuthService AuthService
+@{
+    ViewData["Title"] = "Riwayat Penginput Data Lembur";
+    Layout = "_Layout";
+    var currentUser = AuthService.GetCurrentUser();
+    bool isAdmin = currentUser?.IsAdmin == true;
+
+    double totalJam = Model.Records.Sum(r => r.JamOvertime);
+    double totalTul = Model.Records.Sum(r => r.TotalTul);
+    int totalSubmitters = Model.Records.Select(r => r.CreatedByNpk).Distinct().Count();
+    if (totalSubmitters == 0) totalSubmitters = Model.SubmitterNames.Count;
+
+    Func<string, (string bg, string text, string border)> getPlantBadgeStyle = (plantName) => {
+        var p = (plantName ?? "").ToLower();
+        if (p.Contains("hose")) return ("rgba(244, 63, 94, 0.15)", "#fb7185", "1px solid rgba(244, 63, 94, 0.35)");
+        if (p.Contains("molded")) return ("rgba(56, 189, 248, 0.15)", "#38bdf8", "1px solid rgba(56, 189, 248, 0.35)");
+        if (p.Contains("subcont")) return ("rgba(16, 185, 129, 0.15)", "#34d399", "1px solid rgba(16, 185, 129, 0.35)");
+        if (p.Contains("lab") || p.Contains("mixing")) return ("rgba(245, 158, 11, 0.15)", "#fbbf24", "1px solid rgba(245, 158, 11, 0.35)");
+        if (p.Contains("rvi")) return ("rgba(168, 85, 247, 0.15)", "#c084fc", "1px solid rgba(168, 85, 247, 0.35)");
+        if (p.Contains("qre")) return ("rgba(6, 182, 212, 0.15)", "#22d3ee", "1px solid rgba(6, 182, 212, 0.35)");
+        return ("rgba(148, 163, 184, 0.15)", "#cbd5e1", "1px solid rgba(148, 163, 184, 0.3)");
+    };
+}
+
+<div class="page-content" style="max-width: 1600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
+
+  <!-- 1. CLEAN SLEEK PAGE HEADER -->
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 6px; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);">
+        <i data-lucide="history" style="width: 22px; height: 22px; color: #ffffff;"></i>
+      </div>
+      <div>
+        <h1 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.02em;">
+          Riwayat Penginput Data Lembur
+        </h1>
+        <p style="margin: 3px 0 0; font-size: 0.84rem; color: #94a3b8;">
+          Log pencatatan dan data penginput lembur QC
+        </p>
+      </div>
+    </div>
+
+    <!-- Live Clock Pill -->
+    <div style="display: flex; align-items: center; gap: 8px; background: rgba(9, 24, 52, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 8px 14px;">
+      <i data-lucide="clock" style="width: 15px; height: 15px; color: #38bdf8;"></i>
+      <span id="riwayatLiveClock" style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1; font-family: 'JetBrains Mono', monospace;">
+        --
+      </span>
+    </div>
+  </div>
+
+  <!-- 2. STATISTIC SUMMARY CARDS -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+    <!-- Card 1: Total Transaksi -->
+    <div style="background: rgba(9, 24, 52, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+      <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(14, 165, 233, 0.12); border: 1px solid rgba(56, 189, 248, 0.25); display: flex; align-items: center; justify-content: center; color: #38bdf8;">
+        <i data-lucide="file-text" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total Transaksi</div>
+        <div style="font-size: 1.45rem; font-weight: 800; color: #f8fafc; line-height: 1.2;">
+          @Model.TotalRecords
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Penginput Unik -->
+    <div style="background: rgba(9, 24, 52, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+      <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); display: flex; align-items: center; justify-content: center; color: #34d399;">
+        <i data-lucide="users" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">User Penginput</div>
+        <div style="font-size: 1.45rem; font-weight: 800; color: #34d399; line-height: 1.2;">
+          @totalSubmitters
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Total Jam Lembur -->
+    <div style="background: rgba(9, 24, 52, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+      <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); display: flex; align-items: center; justify-content: center; color: #fbbf24;">
+        <i data-lucide="clock" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total Jam Lembur</div>
+        <div style="font-size: 1.45rem; font-weight: 800; color: #fbbf24; line-height: 1.2;">
+          @totalJam.ToString("N1") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">Jam</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Total TUL Lembur -->
+    <div style="background: rgba(9, 24, 52, 0.75); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 14px;">
+      <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.25); display: flex; align-items: center; justify-content: center; color: #34d399;">
+        <i data-lucide="layers" style="width: 20px; height: 20px;"></i>
+      </div>
+      <div>
+        <div style="font-size: 0.76rem; color: #94a3b8; font-weight: 600;">Total TUL Lembur</div>
+        <div style="font-size: 1.45rem; font-weight: 800; color: #34d399; line-height: 1.2;">
+          @totalTul.ToString("N1") <span style="font-size: 0.82rem; font-weight: 600; color: #94a3b8;">TUL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. FILTER TOOLBAR & SEARCH -->
+  <div style="background: rgba(8, 18, 38, 0.7); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <!-- Search Form -->
+    <form method="get" action="/RiwayatPenginput" style="display: flex; align-items: center; gap: 10px; flex: 1 1 300px; flex-wrap: wrap;">
+      <div style="position: relative; flex: 1 1 240px; max-width: 340px;">
+        <i data-lucide="search" style="width: 15px; height: 15px; color: #64748b; position: absolute; left: 12px; top: 12px;"></i>
+        <input
+          type="text"
+          name="search"
+          value="@Model.SearchKeyword"
+          placeholder="Cari penginput, pekerja, NPK..."
+          style="width: 100%; padding: 9px 12px 9px 36px; background: rgba(5, 12, 26, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 7px; color: #ffffff; font-size: 0.84rem; outline: none; box-sizing: border-box;"
+        />
+      </div>
+
+      <!-- Plant Filter -->
+      <select name="plant" onchange="this.form.submit();" style="padding: 9px 12px; background: rgba(5, 12, 26, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 7px; color: #ffffff; font-size: 0.84rem; outline: none; cursor: pointer;">
+        <option value="ALL">Semua Plant</option>
+        @foreach (var p in Model.PlantList)
+        {
+          <option value="@p" selected="@(Model.SelectedPlant == p)">@p</option>
+        }
+      </select>
+
+      <!-- Submitter Filter -->
+      <select name="submitter" onchange="this.form.submit();" style="padding: 9px 12px; background: rgba(5, 12, 26, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 7px; color: #ffffff; font-size: 0.84rem; outline: none; cursor: pointer;">
+        <option value="ALL">Semua Penginput</option>
+        @foreach (var s in Model.SubmitterNames)
+        {
+          <option value="@s" selected="@(Model.SelectedSubmitter == s)">@s</option>
+        }
+      </select>
+
+      @if (!string.IsNullOrEmpty(Model.SearchKeyword) || Model.SelectedPlant != "ALL" || Model.SelectedSubmitter != "ALL")
+      {
+        <a href="/RiwayatPenginput" style="display: flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: 7px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; font-size: 0.80rem; font-weight: 600; text-decoration: none;">
+          <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
+          <span>Reset</span>
+        </a>
+      }
+    </form>
+
+    <!-- Export Button -->
+    @if (isAdmin)
+    {
+      <a href="/RiwayatPenginput/ExportExcel?search=@Model.SearchKeyword&plant=@Model.SelectedPlant&submitter=@Model.SelectedSubmitter" style="display: flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 7px; background: linear-gradient(90deg, #059669 0%, #10b981 100%); border: none; color: #ffffff; font-size: 0.84rem; font-weight: 700; text-decoration: none; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);">
+        <i data-lucide="download" style="width: 14px; height: 14px;"></i>
+        <span>Ekspor Excel (.xlsx)</span>
+      </a>
+    }
+  </div>
+
+  <!-- 4. MAIN AUDIT LOG TABLE -->
+  <div style="background: rgba(8, 18, 38, 0.75); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 10px; overflow: hidden;">
+    <!-- Table Header Bar -->
+    <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="history" style="width: 16px; height: 16px; color: #38bdf8;"></i>
+        <span style="font-weight: 700; color: #f8fafc; font-size: 0.90rem;">
+          Daftar Riwayat Transaksi (@Model.Records.Count Data)
+        </span>
+      </div>
+      <span style="font-size: 0.78rem; color: #64748b;">
+        Audit trail tersimpan permanen
+      </span>
+    </div>
+
+    <!-- Table Body -->
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+        <thead>
+          <tr style="background: rgba(5, 12, 26, 0.85); border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+            <th style="width: 5%; text-align: center; padding: 11px 8px; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">NO</th>
+            <th style="width: 18%; text-align: left; padding: 11px 12px; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">WAKTU INPUT</th>
+            <th style="width: 25%; text-align: left; padding: 11px 12px; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">PENGINPUT</th>
+            <th style="width: 25%; text-align: left; padding: 11px 12px; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">DATA PEKERJA & PLANT</th>
+            <th style="width: 17%; text-align: center; padding: 11px 10px; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">LEMBUR & TUL</th>
+            <th style="width: 10%; text-align: center; padding: 11px 8px; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">DETAIL</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (Model.Records.Count == 0)
+          {
+            <tr>
+              <td colspan="6" style="padding: 40px 20px; text-align: center; color: #64748b;">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <i data-lucide="history" style="width: 30px; height: 30px; color: #475569;"></i>
+                  <div style="font-size: 0.88rem; fontWeight: 600; color: #e2e8f0;">Tidak ada riwayat penginputan yang cocok</div>
+                  <div style="font-size: 0.78rem; color: #64748b;">Silakan sesuaikan kata kunci pencarian atau filter.</div>
+                </div>
+              </td>
+            </tr>
+          }
+          else
+          {
+            int idx = 1;
+            foreach (var rec in Model.Records)
+            {
+              var plantStyle = getPlantBadgeStyle(rec.Plant);
+              string subName = !string.IsNullOrEmpty(rec.CreatedByName) ? rec.CreatedByName : rec.UserName;
+              string subRole = !string.IsNullOrEmpty(rec.CreatedByRole) ? rec.CreatedByRole : "karyawan";
+              string subNpk = !string.IsNullOrEmpty(rec.CreatedByNpk) ? rec.CreatedByNpk : rec.UserNpk;
+
+              <tr
+                style="border-bottom: 1px solid rgba(255, 255, 255, 0.04); background-color: @(idx % 2 == 1 ? "transparent" : "rgba(255, 255, 255, 0.015)"); transition: background 0.12s ease;"
+                onmouseenter="this.style.backgroundColor='rgba(255, 255, 255, 0.04)';"
+                onmouseleave="this.style.backgroundColor='@(idx % 2 == 1 ? "transparent" : "rgba(255, 255, 255, 0.015)")';"
+              >
+                <!-- NO -->
+                <td style="text-align: center; padding: 11px 8px; color: #64748b; font-weight: 500;">
+                  @idx
+                </td>
+
+                <!-- WAKTU INPUT -->
+                <td style="padding: 11px 12px;">
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="color: #f1f5f9; font-weight: 600; font-size: 0.84rem;">
+                      @rec.CreatedAt.ToString("dd MMM yyyy")
+                    </span>
+                    <span style="color: #94a3b8; font-weight: 500; font-size: 0.84rem; font-family: 'JetBrains Mono', monospace;">
+                      @rec.CreatedAt.ToString("HH:mm:ss")
+                    </span>
+                  </div>
+                </td>
+
+                <!-- DIINPUT OLEH -->
+                <td style="padding: 11px 12px;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: @(subRole == "admin" ? "rgba(168, 85, 247, 0.2)" : "rgba(14, 165, 233, 0.2)"); border: 1px solid @(subRole == "admin" ? "rgba(168, 85, 247, 0.4)" : "rgba(56, 189, 248, 0.4)"); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; flex-shrink: 0;">
+                      @(subName.Length > 0 ? subName.Substring(0, 1).ToUpper() : "U")
+                    </div>
+                    <div>
+                      <div style="font-weight: 600; color: #f8fafc; font-size: 0.86rem;">@subName</div>
+                      <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                        <span style="font-size: 0.70rem; padding: 1px 6px; border-radius: 4px; background: @(subRole == "admin" ? "rgba(168, 85, 247, 0.15)" : "rgba(14, 165, 233, 0.15)"); color: @(subRole == "admin" ? "#c084fc" : "#38bdf8"); font-weight: 600;">
+                          @(subRole == "admin" ? "Admin" : "Karyawan")
+                        </span>
+                        <span style="font-size: 0.74rem; color: #64748b; font-family: 'JetBrains Mono', monospace;">
+                          @subNpk
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- DATA PEKERJA & PLANT -->
+                <td style="padding: 11px 12px;">
+                  <div>
+                    <div style="font-weight: 600; color: #e2e8f0; font-size: 0.86rem;">@rec.UserName</div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
+                      <span style="font-size: 0.74rem; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">
+                        @rec.UserNpk
+                      </span>
+                      <span style="font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; background: @plantStyle.bg; color: @plantStyle.text; border: @plantStyle.border; font-weight: 600;">
+                        @rec.Plant
+                      </span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- LEMBUR & TUL -->
+                <td style="text-align: center; padding: 11px 10px;">
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;">
+                    <span style="font-weight: 700; color: #f8fafc; font-size: 0.88rem;">
+                      @rec.JamOvertime.ToString("N1") Jam
+                    </span>
+                    <span style="font-size: 0.74rem; color: #fbbf24; font-weight: 600;">
+                      @rec.TotalTul.ToString("N1") TUL
+                    </span>
+                  </div>
+                </td>
+
+                <!-- DETAIL -->
+                <td style="text-align: center; padding: 11px 8px;">
+                  <button
+                    type="button"
+                    onclick="showDetailModal('@rec.Id', '@rec.UserName', '@rec.UserNpk', '@rec.Plant', '@rec.ShiftName', '@rec.WorkDate.ToString("yyyy-MM-dd")', '@rec.JamWaktu', '@rec.JamOvertime.ToString("N1")', '@rec.TotalTul.ToString("N1")', '@subName', '@subRole', '@rec.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")');"
+                    style="padding: 4px 10px; border-radius: 5px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); color: #38bdf8; font-size: 0.76rem; font-weight: 600; cursor: pointer;"
+                  >
+                    Lihat
+                  </button>
+                </td>
+              </tr>
+              idx++;
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Detail Modal -->
+<div id="recordDetailModal" style="display: none; position: fixed; inset: 0; background: rgba(5, 12, 24, 0.85); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #091a38 0%, #0d2654 100%); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 16px; padding: 24px 28px; max-width: 520px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+      <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #FFF8E7; display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="file-text" style="width: 18px; height: 18px; color: #00d2ff;"></i>
+        <span>Detail Transaksi Pengajuan</span>
+      </h3>
+      <button type="button" onclick="closeDetailModal();" style="background: none; border: none; color: #94a3b8; cursor: pointer;">
+        <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+
+    <div id="detailModalContent" style="display: flex; flex-direction: column; gap: 12px; font-size: 0.88rem; color: #cbd5e1;">
+      <!-- Populated via JS -->
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+      <button type="button" onclick="closeDetailModal();" style="padding: 8px 18px; border-radius: 8px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #00d2ff; font-weight: 700; cursor: pointer;">
+        Tutup
+      </button>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+  function updateRiwayatLiveClock() {
+    var now = new Date();
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    var d = String(now.getDate()).padStart(2, '0');
+    var m = months[now.getMonth()];
+    var y = now.getFullYear();
+    var h = String(now.getHours()).padStart(2, '0');
+    var min = String(now.getMinutes()).padStart(2, '0');
+    var s = String(now.getSeconds()).padStart(2, '0');
+    var el = document.getElementById('riwayatLiveClock');
+    if (el) el.innerText = d + ' ' + m + ' ' + y + '  ' + h + ':' + min + ':' + s;
+  }
+  updateRiwayatLiveClock();
+  setInterval(updateRiwayatLiveClock, 1000);
+
+  function showDetailModal(id, workerName, workerNpk, plant, shift, date, timeRange, hours, tul, submitterName, submitterRole, createdAt) {
+    var html = `
+      <div style="background: rgba(10, 22, 45, 0.7); border: 1px solid rgba(67, 139, 196, 0.3); border-radius: 8px; padding: 12px 16px;">
+        <div style="color: #8CC1E9; font-size: 0.76rem; text-transform: uppercase; font-weight: 700;">Data Penginput (Submitter)</div>
+        <div style="color: #FFF8E7; font-size: 1rem; font-weight: 800; margin-top: 4px;">${submitterName}</div>
+        <div style="color: #38bdf8; font-size: 0.8rem; margin-top: 2px;">Role: ${submitterRole} • Waktu: ${createdAt}</div>
+      </div>
+
+      <div style="background: rgba(10, 22, 45, 0.7); border: 1px solid rgba(67, 139, 196, 0.3); border-radius: 8px; padding: 12px 16px;">
+        <div style="color: #8CC1E9; font-size: 0.76rem; text-transform: uppercase; font-weight: 700;">Data Pekerja Lembur</div>
+        <div style="color: #FFF8E7; font-size: 1rem; font-weight: 800; margin-top: 4px;">${workerName} (${workerNpk})</div>
+        <div style="color: #34d399; font-size: 0.82rem; margin-top: 2px;">${plant} • ${shift}</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="background: rgba(10, 22, 45, 0.7); border: 1px solid rgba(67, 139, 196, 0.3); border-radius: 8px; padding: 10px 14px;">
+          <div style="color: #8CC1E9; font-size: 0.74rem;">Tanggal & Jam</div>
+          <div style="color: #FFF8E7; font-weight: 700; margin-top: 2px;">${date}</div>
+          <div style="color: #94a3b8; font-size: 0.78rem;">${timeRange}</div>
+        </div>
+        <div style="background: rgba(10, 22, 45, 0.7); border: 1px solid rgba(251, 191, 36, 0.35); border-radius: 8px; padding: 10px 14px;">
+          <div style="color: #fbbf24; font-size: 0.74rem;">Durasi & TUL</div>
+          <div style="color: #FFF8E7; font-weight: 700; margin-top: 2px;">${hours} Jam Lembur</div>
+          <div style="color: #fbbf24; font-size: 0.78rem; font-weight: 700;">${tul} TUL</div>
+        </div>
+      </div>
+    `;
+    document.getElementById('detailModalContent').innerHTML = html;
+    document.getElementById('recordDetailModal').style.display = 'flex';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  function closeDetailModal() {
+    document.getElementById('recordDetailModal').style.display = 'none';
+  }
+</script>
+}

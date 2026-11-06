@@ -1,0 +1,1040 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard All Plants";
+    Layout = "_Layout";
+
+    // Prepare plant summaries dictionary for easy lookup
+    var plantsConfig = new[]
+    {
+        new { Id = "hose", Name = "Plant Hose", Label = "HOSE", Icon = "layers", Color = "#ec4899", BorderGlow = "rgba(236, 72, 153, 0.4)" },
+        new { Id = "molded", Name = "Plant Molded", Label = "MOLDED", Icon = "box", Color = "#0088ff", BorderGlow = "rgba(0, 136, 255, 0.4)" },
+        new { Id = "subcont", Name = "Plant Subcont", Label = "SUBCONT", Icon = "cog", Color = "#10b981", BorderGlow = "rgba(16, 185, 129, 0.4)" },
+        new { Id = "mixing", Name = "Plant Lab Mixing", Label = "LAB MIXING", Icon = "flask-conical", Color = "#f59e0b", BorderGlow = "rgba(245, 158, 11, 0.4)" },
+        new { Id = "rvi", Name = "Plant RVI", Label = "RVI", Icon = "truck", Color = "#a855f7", BorderGlow = "rgba(168, 85, 247, 0.4)" },
+        new { Id = "qre", Name = "Plant QRE", Label = "QRE", Icon = "shield-check", Color = "#06b6d4", BorderGlow = "rgba(6, 182, 212, 0.4)" }
+    };
+
+    var plantStats = plantsConfig.Select(p => {
+        var recs = Model.FilteredRecords.Where(r => 
+            (r.Department != null && r.Department.ToLower() == p.Id.ToLower()) ||
+            (p.Id == "mixing" && (r.Department == "lab-mixing" || r.Department == "lab_mixing")) ||
+            (r.Plant != null && r.Plant.ToLower().Contains(p.Label.ToLower()))
+        ).ToList();
+
+        double hours = recs.Sum(r => r.JamOvertime);
+        double tul = recs.Sum(r => r.TotalTul);
+        int emps = recs.Select(r => r.UserNpk).Distinct().Count();
+        double s1 = recs.Where(r => r.ShiftName == "Shift 1").Sum(r => r.JamOvertime);
+        double s2 = recs.Where(r => r.ShiftName == "Shift 2").Sum(r => r.JamOvertime);
+
+        return new {
+            p.Id,
+            p.Name,
+            p.Label,
+            p.Icon,
+            p.Color,
+            p.BorderGlow,
+            TotalHours = Math.Round(hours, 1),
+            TotalTUL = Math.Round(tul, 1),
+            TotalEmps = emps,
+            Shift1Hours = Math.Round(s1, 1),
+            Shift2Hours = Math.Round(s2, 1)
+        };
+    }).ToList();
+
+    // Shift breakdown
+    double shift1Hours = Model.FilteredRecords.Where(r => r.ShiftName == "Shift 1").Sum(r => r.JamOvertime);
+    double shift2Hours = Model.FilteredRecords.Where(r => r.ShiftName == "Shift 2").Sum(r => r.JamOvertime);
+    double shift1Tul = Model.FilteredRecords.Where(r => r.ShiftName == "Shift 1").Sum(r => r.TotalTul);
+    double shift2Tul = Model.FilteredRecords.Where(r => r.ShiftName == "Shift 2").Sum(r => r.TotalTul);
+    double totalHoursAll = shift1Hours + shift2Hours;
+    int shift1Pct = totalHoursAll > 0 ? (int)Math.Round((shift1Hours / totalHoursAll) * 100) : 50;
+    int shift2Pct = totalHoursAll > 0 ? (int)Math.Round((shift2Hours / totalHoursAll) * 100) : 50;
+
+    // Monthly breakdown for Bulanan Chart
+    var monthlyHours = new double[12];
+    var monthlyTuls = new double[12];
+    foreach (var r in Model.FilteredRecords)
+    {
+        if (r.WorkDate.Month >= 1 && r.WorkDate.Month <= 12)
+        {
+            monthlyHours[r.WorkDate.Month - 1] += r.JamOvertime;
+            monthlyTuls[r.WorkDate.Month - 1] += r.TotalTul;
+        }
+    }
+    for (int i = 0; i < 12; i++)
+    {
+        monthlyHours[i] = Math.Round(monthlyHours[i], 1);
+        monthlyTuls[i] = Math.Round(monthlyTuls[i], 1);
+    }
+}
+
+<div class="page-content" style="max-width: 1600px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
+
+  <!-- 1. TOP EXECUTIVE HERO BANNER -->
+  <div class="dashboard-hero-mockup-card" style="margin-bottom: 0;">
+    <div class="hero-mockup-left">
+      <div class="hero-glowing-icon">
+        <i data-lucide="globe" style="width: 22px; height: 22px; color: #ffffff;"></i>
+      </div>
+      <div class="hero-text-block">
+        <div class="hero-dept-tag">QUALITY CONTROL</div>
+        <h1 class="hero-main-title">Dashboard Overtime All Plants</h1>
+        <p class="hero-desc">
+          Monitoring dan analisis komparasi lembur seluruh plant (Hose, Molded, Subcont, Mixing, RVI).
+        </p>
+      </div>
+    </div>
+
+    <!-- Live Status Card -->
+    <div class="hero-live-status-card">
+      <div class="hero-live-clock-icon">
+        <i data-lucide="clock" style="width: 15px; height: 15px; color: #38bdf8;"></i>
+      </div>
+      <div class="hero-status-texts">
+        <span class="hero-status-label">Waktu Sistem</span>
+        <span class="hero-status-time" id="allPlantsLiveClock">--</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. FILTER PARAMETER CONTROL BAR -->
+  <div class="filter-parameter-mockup-card" style="margin-bottom: 0;">
+    <div class="filter-parameter-top-row">
+      <div class="filter-parameter-title-group">
+        <i data-lucide="filter" style="width: 15px; height: 15px; color: #38bdf8;"></i>
+        <span class="filter-param-header-text">Filter Parameter</span>
+        <span class="filter-live-pill">All Plants</span>
+      </div>
+
+      <div class="filter-parameter-actions">
+        <a href="/Dashboard" class="btn-filter-reset" title="Reset Semua Kriteria Filter">
+          <i data-lucide="rotate-ccw" style="width: 13px; height: 13px;"></i>
+          <span>Reset</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 5-Column Filter Parameter Form Grid -->
+    <form id="dashboardFilterForm" method="get" action="/Dashboard" class="filter-boxes-grid">
+      <!-- Box 1: BULAN -->
+      <div class="filter-param-box">
+        <div class="filter-param-box-left">
+          <i data-lucide="calendar" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
+          <div class="filter-param-box-texts">
+            <span class="filter-param-box-label">Bulan</span>
+            <select name="months" id="dashboardMonths" class="filter-box-native-select" onchange="onFilterMonthChange(this, 'dashboardDays');">
+              <option value="">Semua Bulan</option>
+              @foreach (var m in Model.MonthList)
+              {
+                <option value="@m" selected="@(Model.SelectedMonths.Contains(m))">@m</option>
+              }
+            </select>
+          </div>
+        </div>
+        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+      </div>
+
+      <!-- Box 2: TANGGAL -->
+      <div class="filter-param-box">
+        <div class="filter-param-box-left">
+          <i data-lucide="calendar" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
+          <div class="filter-param-box-texts">
+            <span class="filter-param-box-label">Tanggal</span>
+            <select name="days" id="dashboardDays" class="filter-box-native-select" onchange="this.form.submit();">
+              <option value="">Semua Tanggal</option>
+              @foreach (var s in Model.DayList)
+              {
+                <option value="@s" selected="@(Model.SelectedDays.Contains(s))">Tanggal @s</option>
+              }
+            </select>
+          </div>
+        </div>
+        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+      </div>
+
+      <!-- Box 3: SHIFT -->
+      <div class="filter-param-box">
+        <div class="filter-param-box-left">
+          <i data-lucide="users" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
+          <div class="filter-param-box-texts">
+            <span class="filter-param-box-label">Shift</span>
+            <select name="shifts" class="filter-box-native-select" onchange="this.form.submit();">
+              <option value="">Semua Shift</option>
+              <option value="Shift 1" selected="@(Model.SelectedShifts.Contains("Shift 1"))">Shift 1 (Malam)</option>
+              <option value="Shift 2" selected="@(Model.SelectedShifts.Contains("Shift 2"))">Shift 2 (Pagi)</option>
+            </select>
+          </div>
+        </div>
+        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+      </div>
+
+      <!-- Box 4: PLANT -->
+      <div class="filter-param-box">
+        <div class="filter-param-box-left">
+          <i data-lucide="building-2" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
+          <div class="filter-param-box-texts">
+            <span class="filter-param-box-label">Plant</span>
+            <select name="plants" class="filter-box-native-select" onchange="this.form.submit();">
+              <option value="">Semua Plant</option>
+              @foreach (var p in Model.AllowedPlants)
+              {
+                if (p.Id != "all-plants")
+                {
+                  <option value="@p.Name" selected="@(Model.SelectedPlants.Contains(p.Name) || Model.SelectedPlants.Contains(p.Dept))">@p.Name</option>
+                }
+              }
+            </select>
+          </div>
+        </div>
+        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+      </div>
+
+      <!-- Box 5: KARYAWAN -->
+      <div class="filter-param-box">
+        <div class="filter-param-box-left">
+          <i data-lucide="user" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
+          <div class="filter-param-box-texts">
+            <span class="filter-param-box-label">Karyawan</span>
+            <select name="employees" class="filter-box-native-select" onchange="this.form.submit();">
+              <option value="">Semua Karyawan</option>
+              @foreach (var emp in Model.AllEmployees)
+              {
+                <option value="@emp.Npk" selected="@(Model.SelectedEmployees.Contains(emp.Npk))">@emp.Name (@emp.Npk)</option>
+              }
+            </select>
+          </div>
+        </div>
+        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
+      </div>
+    </form>
+  </div>
+
+  <!-- 3. TOP 2 EXECUTIVE GLOBAL KPI CARDS -->
+  <div class="kpi-metric-mockup-grid" style="margin-bottom: 0;">
+    <!-- Metric 1: Total Jam Lembur All Plants -->
+    <div class="kpi-mockup-card kpi-card-blue">
+      <div class="kpi-header-row">
+        <div class="kpi-icon-square">
+          <i data-lucide="clock" style="width: 15px; height: 15px; color: #38bdf8;"></i>
+        </div>
+        <span class="kpi-card-title">TOTAL JAM OVERTIME (ALL)</span>
+      </div>
+
+      <div class="kpi-body-row">
+        <div class="kpi-main-number-block">
+          <span class="kpi-main-number">@Model.TotalJamOvertime.ToString("N1")</span>
+          <span class="kpi-main-unit">Jam</span>
+        </div>
+      </div>
+
+      <div class="kpi-footer-text">
+        Agregasi seluruh plant QC
+      </div>
+    </div>
+
+    <!-- Metric 2: Karyawan Aktif Lembur -->
+    <div class="kpi-mockup-card kpi-card-amber">
+      <div class="kpi-header-row">
+        <div class="kpi-icon-square" style="background: rgba(245, 158, 11, 0.12);">
+          <i data-lucide="users" style="width: 15px; height: 15px; color: #fbbf24;"></i>
+        </div>
+        <span class="kpi-card-title">KARYAWAN AKTIF LEMBUR</span>
+      </div>
+
+      <div class="kpi-body-row">
+        <div class="kpi-main-number-block">
+          <span class="kpi-main-number">@Model.UniqueEmployees</span>
+          <span class="kpi-main-unit">Orang</span>
+        </div>
+      </div>
+
+      <div class="kpi-footer-text">
+        Personel QC lembur tercatat
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 6 PLANT OVERVIEW & NAVIGATION CARDS -->
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i data-lucide="building-2" style="width: 16px; height: 16px; color: #38bdf8;"></i>
+        <span style="font-size: 0.88rem; font-weight: 700; color: #f8fafc; letter-spacing: 0.02em;">
+          Ringkasan Overtime Per Plant
+        </span>
+      </div>
+      <span style="font-size: 0.74rem; color: #64748b;">
+        Pilih plant untuk melihat detail
+      </span>
+    </div>
+
+    <div class="all-plants-grid">
+      @foreach (var p in plantStats)
+      {
+        <div class="plant-overview-card" onclick="window.location.href='/Dashboard/Plant/@p.Id';" style="cursor: pointer;">
+          <!-- Header -->
+          <div class="plant-card-header">
+            <div class="plant-card-icon" style="background-color: @(p.Color)18; border-color: @(p.Color)40; color: @p.Color;">
+              <i data-lucide="@p.Icon" style="width: 16px; height: 16px;"></i>
+            </div>
+            <div class="plant-card-title-group">
+              <span class="plant-card-name">@p.Name</span>
+            </div>
+            <i data-lucide="chevron-right" style="width: 14px; height: 14px; color: #64748b; margin-left: auto; flex-shrink: 0;"></i>
+          </div>
+
+          <!-- Metrics -->
+          <div class="plant-card-metrics">
+            <div class="plant-metric-item">
+              <span class="plant-metric-label">Jam Lembur</span>
+              <span class="plant-metric-val">
+                @p.TotalHours <small>Jam</small>
+              </span>
+            </div>
+            <div class="plant-metric-item">
+              <span class="plant-metric-label">Total TUL</span>
+              <span class="plant-metric-val" style="color: #fbbf24;">
+                @p.TotalTUL <small style="color: #94a3b8;">TUL</small>
+              </span>
+            </div>
+            <div class="plant-metric-item">
+              <span class="plant-metric-label">Karyawan</span>
+              <span class="plant-metric-val" style="color: #34d399;">
+                @p.TotalEmps <small style="color: #94a3b8;">Org</small>
+              </span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="plant-card-footer">
+            <span class="plant-shift-breakdown">
+              S1: <strong>@(p.Shift1Hours)h</strong> • S2: <strong>@(p.Shift2Hours)h</strong>
+            </span>
+            <div class="plant-goto-btn">
+              <span>Lihat</span>
+              <i data-lucide="arrow-right" style="width: 12px; height: 12px;"></i>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- 5. PLANT COMPARISON CHARTS SECTION -->
+  <div class="plant-comparison-row">
+    <div class="chart-card plant-comparison-chart-card" style="padding: 16px 20px; min-height: 310px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(0, 85, 160, 0.35); border: 1px solid rgba(140, 193, 233, 0.4); display: flex; align-items: center; justify-content: center;">
+            <i data-lucide="bar-chart-2" style="width: 15px; height: 15px; color: #00d2ff;"></i>
+          </div>
+          <span style="font-size: 0.88rem; font-weight: 800; color: #FFF8E7; font-family: 'Outfit', sans-serif; letter-spacing: 0.02em;">
+            KOMPARASI JAM LEMBUR & TUL ANTAR PLANT
+          </span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.7rem;">
+          <div style="display: flex; align-items: center; gap: 4px; background: rgba(10, 22, 45, 0.7); padding: 3px 7px; border-radius: 4px; border: 1px solid rgba(67, 139, 196, 0.35);">
+            <span style="width: 8px; height: 8px; background: #0088ff; display: inline-block; border-radius: 2px;"></span>
+            <span style="color: #FFF8E7; font-weight: 700;">JAM LEMBUR</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 4px; background: rgba(10, 22, 45, 0.7); padding: 3px 7px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.4);">
+            <span style="width: 10px; height: 2.5px; background: #fbbf24; display: inline-block; border-radius: 2px;"></span>
+            <span style="color: #fbbf24; font-weight: 700;">TUL</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-canvas-wrapper" style="flex: 1; min-height: 240px; position: relative;">
+        <canvas id="plantComparisonChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MAIN 2-COLUMN LAYOUT: 3 BOXES LEFT + 2 BOXES RIGHT -->
+  <div class="dashboard-analytics-split-layout" style="display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 16px; align-items: stretch;">
+
+    <!-- === SISI KIRI (3 KOTAK SEJAJAR KE BAWAH) === -->
+    <div style="display: grid; grid-template-rows: 1fr 1fr 1fr; gap: 16px; height: 100%;">
+
+      <!-- KOTAK 1 KIRI: TREN OVERTIME BULANAN -->
+      <div class="chart-card" style="padding: 16px 20px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; min-height: 220px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; flex-shrink: 0;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(0, 85, 160, 0.35); border: 1px solid rgba(140, 193, 233, 0.4); display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="trending-up" style="width: 15px; height: 15px; color: #00d2ff;"></i>
+            </div>
+            <span style="font-size: 0.88rem; font-weight: 800; color: #FFF8E7; font-family: 'Outfit', sans-serif; letter-spacing: 0.02em;">
+              TREN OVERTIME BULANAN (ALL PLANTS)
+            </span>
+          </div>
+
+          <!-- Legends -->
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 0.82rem;">
+            <div style="display: flex; align-items: center; gap: 5px; background: rgba(10, 22, 45, 0.7); padding: 4px 9px; border-radius: 4px; border: 1px solid rgba(67, 139, 196, 0.35);">
+              <span style="width: 9px; height: 9px; background: #0088ff; display: inline-block; border-radius: 2px;"></span>
+              <span style="color: #FFF8E7; font-weight: 700;">JAM OT</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px; background: rgba(10, 22, 45, 0.7); padding: 4px 9px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.4);">
+              <span style="width: 11px; height: 3px; background: #fbbf24; display: inline-block; border-radius: 2px;"></span>
+              <span style="color: #fbbf24; font-weight: 700;">TUL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bulanan Chart with Left Capsule -->
+        <div style="display: flex; flex: 1; min-height: 0; position: relative; width: 100%;">
+          <div style="width: 36px; display: flex; align-items: stretch; justify-content: center; flex-shrink: 0; margin-right: 12px; background: linear-gradient(180deg, rgba(0, 85, 160, 0.5) 0%, rgba(10, 22, 45, 0.95) 100%); border: 1px solid rgba(67, 139, 196, 0.4); border-radius: 8px; padding: 3px;">
+            <div style="flex: 1; background: #091a38; border-left: 3px solid #0088ff; border-radius: 5px; display: flex; align-items: center; justify-content: center; padding: 8px 2px;">
+              <span style="writing-mode: vertical-rl; transform: rotate(180deg); font-size: 0.78rem; font-weight: 900; letter-spacing: 0.2em; color: #8CC1E9; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
+                BULANAN
+              </span>
+            </div>
+          </div>
+
+          <div class="chart-canvas-wrapper" style="flex: 1; min-height: 160px; position: relative;">
+            <canvas id="bulananChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- KOTAK 2 KIRI: TREN OVERTIME MINGGUAN -->
+      <div class="chart-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; min-height: 220px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; flex-shrink: 0;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(0, 85, 160, 0.35); border: 1px solid rgba(140, 193, 233, 0.4); display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="calendar" style="width: 17px; height: 17px; color: #00d2ff;"></i>
+            </div>
+            <span style="font-size: 1.05rem; font-weight: 800; color: #FFF8E7; font-family: 'Outfit', sans-serif; letter-spacing: 0.02em;">
+              TREN OVERTIME MINGGUAN (ALL PLANTS)
+            </span>
+            <span style="font-size: 0.78rem; padding: 2px 8px; border-radius: 4px; background: rgba(0, 229, 255, 0.15); color: #00d2ff; font-weight: 700;">
+              W1 - W4
+            </span>
+          </div>
+
+          <!-- Legends -->
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 0.82rem;">
+            <div style="display: flex; align-items: center; gap: 5px; background: rgba(10, 22, 45, 0.7); padding: 4px 9px; border-radius: 4px; border: 1px solid rgba(67, 139, 196, 0.35);">
+              <span style="width: 9px; height: 9px; background: #0088ff; display: inline-block; border-radius: 2px;"></span>
+              <span style="color: #FFF8E7; font-weight: 700;">JAM OT</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px; background: rgba(10, 22, 45, 0.7); padding: 4px 9px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.4);">
+              <span style="width: 11px; height: 3px; background: #fbbf24; display: inline-block; border-radius: 2px;"></span>
+              <span style="color: #fbbf24; font-weight: 700;">TUL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mingguan Chart with Left Capsule -->
+        <div style="display: flex; flex: 1; min-height: 0; position: relative; width: 100%;">
+          <div style="width: 36px; display: flex; align-items: stretch; justify-content: center; flex-shrink: 0; margin-right: 12px; background: linear-gradient(180deg, rgba(0, 85, 160, 0.5) 0%, rgba(10, 22, 45, 0.95) 100%); border: 1px solid rgba(67, 139, 196, 0.4); border-radius: 8px; padding: 3px;">
+            <div style="flex: 1; background: #091a38; border-left: 3px solid #00e5ff; border-radius: 5px; display: flex; align-items: center; justify-content: center; padding: 8px 2px;">
+              <span style="writing-mode: vertical-rl; transform: rotate(180deg); font-size: 0.78rem; font-weight: 900; letter-spacing: 0.2em; color: #8CC1E9; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
+                MINGGUAN
+              </span>
+            </div>
+          </div>
+
+          <div class="chart-canvas-wrapper" style="flex: 1; min-height: 160px; position: relative;">
+            <canvas id="mingguanChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- KOTAK 3 KIRI: TREN OVERTIME HARIAN -->
+      <div class="chart-card" style="padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; min-height: 220px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; flex-shrink: 0;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(0, 85, 160, 0.35); border: 1px solid rgba(140, 193, 233, 0.4); display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="clock" style="width: 17px; height: 17px; color: #00d2ff;"></i>
+            </div>
+            <span style="font-size: 1.05rem; font-weight: 800; color: #FFF8E7; font-family: 'Outfit', sans-serif; letter-spacing: 0.02em;">
+              TREN OVERTIME HARIAN (ALL PLANTS)
+            </span>
+            <span style="font-size: 0.78rem; padding: 2px 8px; border-radius: 4px; background: rgba(0, 85, 160, 0.25); color: #8CC1E9; font-weight: 700;">
+              @Model.ActiveDate
+            </span>
+          </div>
+
+          <!-- Legends -->
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 0.82rem;">
+            <div style="display: flex; align-items: center; gap: 5px; background: rgba(10, 22, 45, 0.7); padding: 4px 9px; border-radius: 4px; border: 1px solid rgba(67, 139, 196, 0.35);">
+              <span style="width: 9px; height: 9px; background: #0088ff; display: inline-block; border-radius: 2px;"></span>
+              <span style="color: #FFF8E7; font-weight: 700;">JAM OT</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px; background: rgba(10, 22, 45, 0.7); padding: 4px 9px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.4);">
+              <span style="width: 11px; height: 3px; background: #fbbf24; display: inline-block; border-radius: 2px;"></span>
+              <span style="color: #fbbf24; font-weight: 700;">TUL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Harian Chart with Left Capsule -->
+        <div style="display: flex; flex: 1; min-height: 0; position: relative; width: 100%;">
+          <div style="width: 36px; display: flex; align-items: stretch; justify-content: center; flex-shrink: 0; margin-right: 12px; background: linear-gradient(180deg, rgba(0, 85, 160, 0.5) 0%, rgba(10, 22, 45, 0.95) 100%); border: 1px solid rgba(67, 139, 196, 0.4); border-radius: 8px; padding: 3px;">
+            <div style="flex: 1; background: #091a38; border-left: 3px solid #0088ff; border-radius: 5px; display: flex; align-items: center; justify-content: center; padding: 8px 2px;">
+              <span style="writing-mode: vertical-rl; transform: rotate(180deg); font-size: 0.78rem; font-weight: 900; letter-spacing: 0.2em; color: #8CC1E9; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
+                HARIAN
+              </span>
+            </div>
+          </div>
+
+          <div class="chart-canvas-wrapper" style="flex: 1; min-height: 160px; position: relative;">
+            <canvas id="harianChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- === SISI KANAN (2 KOTAK SEJAJAR KE BAWAH: TOP 10 & DISTRIBUSI SHIFT DENGAN UKURAN PERSIS SAMA 50%-50%) === -->
+    <div style="display: grid; grid-template-rows: 1fr 1fr; gap: 16px; height: 100%;">
+
+      <!-- KOTAK 1 KANAN: TOP 10 OVERTIME KARYAWAN (PARETO LEADERBOARD) -->
+      <div class="chart-card" style="padding: 18px 20px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; min-height: 340px;">
+        <div class="chart-card-header" style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+          <span class="chart-title" style="font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #FFF8E7; font-family: 'Outfit', sans-serif;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(0, 85, 160, 0.35); border: 1px solid rgba(67, 139, 196, 0.4); display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="users" style="width: 17px; height: 17px; color: #00d2ff;"></i>
+            </div>
+            TOP 10 OVERTIME KARYAWAN (ALL PLANTS)
+          </span>
+        </div>
+
+        <div class="chart-canvas-wrapper" style="flex: 1; min-height: 260px; position: relative; width: 100%;">
+          <canvas id="paretoChart"></canvas>
+        </div>
+      </div>
+
+      <!-- KOTAK 2 KANAN: PENCAPAIAN & DISTRIBUSI OVERTIME PER SHIFT -->
+      <div class="chart-card" style="padding: 18px 20px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; min-height: 340px;">
+        <div class="chart-card-header" style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+          <span class="chart-title" style="font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #FFF8E7; font-family: 'Outfit', sans-serif;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(0, 85, 160, 0.35); border: 1px solid rgba(140, 193, 233, 0.4); display: flex; align-items: center; justify-content: center;">
+              <i data-lucide="pie-chart" style="width: 17px; height: 17px; color: #00d2ff;"></i>
+            </div>
+            DISTRIBUSI LEMBUR PER SHIFT (ALL PLANTS)
+          </span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; justify-content: space-between;">
+          <!-- Donut Canvas -->
+          <div class="chart-canvas-wrapper" style="flex: 1; min-height: 160px; position: relative; display: flex; align-items: center; justify-content: center;">
+            <div style="position: relative; width: 100%; height: 100%; max-height: 200px;">
+              <canvas id="shiftDoughnutChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Shift Breakdown Detail Cards -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex-shrink: 0;">
+            <!-- Shift 1 Card -->
+            <div style="background: rgba(0, 85, 160, 0.25); border: 2px solid rgba(0, 136, 255, 0.65); border-radius: 12px; padding: 14px 16px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.92rem; font-weight: 800; color: #8CC1E9; display: flex; align-items: center; gap: 6px;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #0088ff; display: inline-block;"></span>
+                  SHIFT 1
+                </span>
+                <span style="font-size: 0.88rem; font-weight: 800; color: #FFF8E7;">
+                  @shift1Pct%
+                </span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px;">
+                <span style="font-size: 1.45rem; font-weight: 900; color: #FFF8E7; font-family: 'Outfit', sans-serif;">
+                  @shift1Hours <span style="font-size: 0.85rem; color: #8CC1E9;">Jam</span>
+                </span>
+                <span style="font-size: 0.88rem; color: #fbbf24; font-weight: 700;">
+                  @shift1Tul TUL
+                </span>
+              </div>
+            </div>
+
+            <!-- Shift 2 Card -->
+            <div style="background: rgba(251, 191, 36, 0.12); border: 2px solid rgba(251, 191, 36, 0.55); border-radius: 12px; padding: 14px 16px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.92rem; font-weight: 800; color: #fbbf24; display: flex; align-items: center; gap: 6px;">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #fbbf24; display: inline-block;"></span>
+                  SHIFT 2
+                </span>
+                <span style="font-size: 0.88rem; font-weight: 800; color: #FFF8E7;">
+                  @shift2Pct%
+                </span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px;">
+                <span style="font-size: 1.45rem; font-weight: 900; color: #FFF8E7; font-family: 'Outfit', sans-serif;">
+                  @shift2Hours <span style="font-size: 0.85rem; color: #8CC1E9;">Jam</span>
+                </span>
+                <span style="font-size: 0.88rem; color: #fbbf24; font-weight: 700;">
+                  @shift2Tul TUL
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- 7. BOTTOM INFORMATIONAL & MOTTO BANNER -->
+  <div class="bottom-info-mockup-banner" style="margin-top: 0;">
+    <div class="bottom-info-left">
+      <div class="bottom-info-icon-box">
+        <i data-lucide="volume-2" style="width: 16px; height: 16px; color: #ffffff;"></i>
+      </div>
+      <div class="bottom-info-text-wrap">
+        <span class="bottom-info-title">Informasi All Plants</span>
+        <span class="bottom-info-desc">
+          Data lembur seluruh plant (Hose, Molded, Subcont, Mixing, RVI) telah terakumulasi secara real-time.
+        </span>
+      </div>
+    </div>
+
+    <div class="bottom-info-motto">
+      — Quality Today, Better Tomorrow
+    </div>
+  </div>
+
+</div>
+
+@section Scripts {
+<script>
+  // Live digital clock
+  function updateLiveClock() {
+    var now = new Date();
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    var d = String(now.getDate()).padStart(2, '0');
+    var m = months[now.getMonth()];
+    var y = now.getFullYear();
+    var h = String(now.getHours()).padStart(2, '0');
+    var min = String(now.getMinutes()).padStart(2, '0');
+    var s = String(now.getSeconds()).padStart(2, '0');
+    var el = document.getElementById('allPlantsLiveClock');
+    if (el) {
+      el.innerText = d + ' ' + m + ' ' + y + '  ' + h + ':' + min + ':' + s;
+    }
+  }
+  updateLiveClock();
+  setInterval(updateLiveClock, 1000);
+
+  // Line datalabels plugin
+  const lineDatalabelsPlugin = {
+    id: 'lineDatalabelsPluginAllPlants',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      chart.data.datasets.forEach((dataset, datasetIndex) => {
+        if (dataset.type === 'line' && dataset.label && dataset.label.includes('TUL')) {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          if (!meta.hidden) {
+            meta.data.forEach((element, index) => {
+              const val = dataset.data[index];
+              if (val !== undefined && val !== null && val > 0) {
+                ctx.save();
+                ctx.fillStyle = '#FFF8E7';
+                ctx.font = 'bold 12px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.shadowColor = 'rgba(0, 136, 255, 0.8)';
+                ctx.shadowBlur = 4;
+                ctx.fillText(val.toString(), element.x, element.y - 6);
+                ctx.restore();
+              }
+            });
+          }
+        }
+      });
+    }
+  };
+
+  // 1. Plant Comparison Bar & Line Chart
+  var plantLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(plantStats.Select(p => p.Label)));
+  var plantHours = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(plantStats.Select(p => p.TotalHours)));
+  var plantTuls = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(plantStats.Select(p => p.TotalTUL)));
+  var plantColors = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(plantStats.Select(p => p.Color)));
+
+  var ctxComparison = document.getElementById('plantComparisonChart');
+  if (ctxComparison) {
+    new Chart(ctxComparison, {
+      data: {
+        labels: plantLabels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'JAM LEMBUR (JAM)',
+            data: plantHours,
+            backgroundColor: plantColors,
+            hoverBackgroundColor: '#00d2ff',
+            borderColor: '#8CC1E9',
+            borderWidth: 1,
+            borderRadius: 5,
+            barPercentage: 0.5,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: 'TOTAL TUL',
+            data: plantTuls,
+            borderColor: '#fbbf24',
+            backgroundColor: '#fbbf24',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#fbbf24',
+            pointBorderColor: '#091a38',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            tension: 0.3,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#091a38',
+            borderColor: '#fbbf24',
+            borderWidth: 1,
+            titleColor: '#8CC1E9',
+            bodyColor: '#FFF8E7',
+            padding: 9
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(67, 139, 196, 0.1)' },
+            ticks: { color: '#FFF8E7', font: { size: 12, family: 'Inter', weight: '700' } }
+          },
+          y: {
+            type: 'linear',
+            position: 'left',
+            min: 0,
+            ticks: { color: '#8CC1E9', font: { size: 11, weight: '700' }, callback: v => v + 'h' },
+            grid: { color: 'rgba(67, 139, 196, 0.12)' }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            min: 0,
+            ticks: { color: '#fbbf24', font: { size: 11, weight: '700' }, callback: v => v + ' TUL' },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      },
+      plugins: [lineDatalabelsPlugin]
+    });
+  }
+
+  // 2. Bulanan Chart
+  var bulananLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  var bulananHours = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyHours));
+  var bulananTuls = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyTuls));
+
+  var ctxBulanan = document.getElementById('bulananChart');
+  if (ctxBulanan) {
+    new Chart(ctxBulanan, {
+      data: {
+        labels: bulananLabels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'JAM OVERTIME',
+            data: bulananHours,
+            backgroundColor: '#0088ff',
+            hoverBackgroundColor: '#00d2ff',
+            borderColor: '#8CC1E9',
+            borderWidth: 1,
+            borderRadius: 4,
+            barPercentage: 0.45,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: 'TOTAL TUL',
+            data: bulananTuls,
+            borderColor: '#fbbf24',
+            backgroundColor: '#fbbf24',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#fbbf24',
+            pointBorderColor: '#091a38',
+            pointBorderWidth: 2,
+            pointRadius: 4.5,
+            tension: 0.3,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(67, 139, 196, 0.1)' },
+            ticks: { color: '#FFF8E7', font: { size: 11, weight: '700' } }
+          },
+          y: {
+            type: 'linear',
+            position: 'left',
+            min: 0,
+            ticks: { color: '#8CC1E9', font: { size: 10, weight: '700' }, callback: v => v + 'h' },
+            grid: { color: 'rgba(67, 139, 196, 0.1)' }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            min: 0,
+            ticks: { color: '#fbbf24', font: { size: 10, weight: '700' } },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      },
+      plugins: [lineDatalabelsPlugin]
+    });
+  }
+
+  // 3. Mingguan Chart (W1-W4)
+  var mingguanLabels = ['W1', 'W2', 'W3', 'W4'];
+  var mingguanHours = [
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.JamOvertime), 1),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.JamOvertime), 1),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.JamOvertime), 1),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.JamOvertime), 1)
+  ];
+  var mingguanTuls = [
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 1 && r.WorkDate.Day <= 7).Sum(r => r.TotalTul), 1),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 8 && r.WorkDate.Day <= 14).Sum(r => r.TotalTul), 1),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 15 && r.WorkDate.Day <= 21).Sum(r => r.TotalTul), 1),
+    @Math.Round(Model.FilteredRecords.Where(r => r.WorkDate.Day >= 22).Sum(r => r.TotalTul), 1)
+  ];
+
+  var ctxMingguan = document.getElementById('mingguanChart');
+  if (ctxMingguan) {
+    new Chart(ctxMingguan, {
+      data: {
+        labels: mingguanLabels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'JAM OVERTIME',
+            data: mingguanHours,
+            backgroundColor: '#0088ff',
+            hoverBackgroundColor: '#00d2ff',
+            borderColor: '#8CC1E9',
+            borderWidth: 1,
+            borderRadius: 4,
+            barPercentage: 0.45,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: 'TOTAL TUL',
+            data: mingguanTuls,
+            borderColor: '#fbbf24',
+            backgroundColor: '#fbbf24',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#fbbf24',
+            pointBorderColor: '#091a38',
+            pointBorderWidth: 2,
+            pointRadius: 4.5,
+            tension: 0.3,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(67, 139, 196, 0.1)' },
+            ticks: { color: '#FFF8E7', font: { size: 11, weight: '700' } }
+          },
+          y: {
+            type: 'linear',
+            position: 'left',
+            min: 0,
+            ticks: { color: '#8CC1E9', font: { size: 10, weight: '700' }, callback: v => v + 'h' },
+            grid: { color: 'rgba(67, 139, 196, 0.1)' }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            min: 0,
+            ticks: { color: '#fbbf24', font: { size: 10, weight: '700' } },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      },
+      plugins: [lineDatalabelsPlugin]
+    });
+  }
+
+  // 4. Harian Chart
+  var dailyLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailySummaries.Select(d => d.Day)));
+  var dailyHours = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailySummaries.Select(d => d.TotalJam)));
+  var dailyTuls = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DailySummaries.Select(d => d.TotalTul)));
+
+  var ctxHarian = document.getElementById('harianChart');
+  if (ctxHarian) {
+    new Chart(ctxHarian, {
+      data: {
+        labels: dailyLabels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'JAM OVERTIME',
+            data: dailyHours,
+            backgroundColor: '#0088ff',
+            hoverBackgroundColor: '#00d2ff',
+            borderColor: '#8CC1E9',
+            borderWidth: 1,
+            borderRadius: 3,
+            barPercentage: 0.6,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: 'TOTAL TUL',
+            data: dailyTuls,
+            borderColor: '#fbbf24',
+            backgroundColor: '#fbbf24',
+            borderWidth: 2,
+            pointBackgroundColor: '#fbbf24',
+            pointBorderColor: '#091a38',
+            pointBorderWidth: 1.5,
+            pointRadius: 3.5,
+            tension: 0.3,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(67, 139, 196, 0.08)' },
+            ticks: { color: '#FFF8E7', font: { size: 10, weight: '600' } }
+          },
+          y: {
+            type: 'linear',
+            position: 'left',
+            min: 0,
+            ticks: { color: '#8CC1E9', font: { size: 10, weight: '700' }, callback: v => v + 'h' },
+            grid: { color: 'rgba(67, 139, 196, 0.1)' }
+          },
+          y1: {
+            type: 'linear',
+            position: 'right',
+            min: 0,
+            ticks: { color: '#fbbf24', font: { size: 10, weight: '700' } },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      },
+      plugins: [lineDatalabelsPlugin]
+    });
+  }
+
+  // 5. Pareto Leaderboard (Top 10 Employees)
+  var paretoNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopEmployees.Select(e => e.Name)));
+  var paretoHours = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopEmployees.Select(e => e.TotalJam)));
+  var paretoTuls = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TopEmployees.Select(e => e.TotalTul)));
+
+  var ctxPareto = document.getElementById('paretoChart');
+  if (ctxPareto) {
+    new Chart(ctxPareto, {
+      type: 'bar',
+      data: {
+        labels: paretoNames,
+        datasets: [
+          {
+            label: 'JAM OVERTIME',
+            data: paretoHours,
+            backgroundColor: '#0088ff',
+            hoverBackgroundColor: '#00d2ff',
+            borderRadius: 4,
+            barPercentage: 0.55
+          },
+          {
+            type: 'line',
+            label: 'TOTAL TUL',
+            data: paretoTuls,
+            borderColor: '#fbbf24',
+            backgroundColor: '#fbbf24',
+            borderWidth: 2,
+            pointBackgroundColor: '#fbbf24',
+            pointRadius: 4,
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(67, 139, 196, 0.1)' },
+            ticks: { color: '#8CC1E9', font: { size: 11, weight: '700' } }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#FFF8E7', font: { size: 11, family: 'Inter', weight: '700' } }
+          }
+        }
+      }
+    });
+  }
+
+  // 6. Shift Doughnut Chart
+  var ctxShift = document.getElementById('shiftDoughnutChart');
+  if (ctxShift) {
+    new Chart(ctxShift, {
+      type: 'doughnut',
+      data: {
+        labels: ['Shift 1', 'Shift 2'],
+        datasets: [{
+          data: [@shift1Hours, @shift2Hours],
+          backgroundColor: ['#0088ff', '#fbbf24'],
+          borderColor: '#091a38',
+          borderWidth: 3,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#091a38',
+            borderColor: '#00d2ff',
+            borderWidth: 1,
+            callbacks: {
+              label: function(ctx) {
+                return ctx.label + ': ' + ctx.raw + ' Jam';
+              }
+            }
+          }
+        },
+        cutout: '70%'
+      }
+    });
+  }
+</script>
+}

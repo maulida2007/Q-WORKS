@@ -43,9 +43,13 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
-            "Microsoft.AspNetCore.SpaProxy": {
+            "ClosedXML": {
               "target": "Package",
-              "version": "[8.*, )"
+              "version": "[0.104.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[8.0.10, )"
             }
           },
           "imports": [
