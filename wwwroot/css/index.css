@@ -5,7 +5,7 @@
            Blueberry (#0055A0), Bluebird (#438BC4)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('fonts.css');
 
 :root {
   /* === Palette Core Swatches === */

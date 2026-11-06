@@ -143,15 +143,15 @@
     </button>
 
     <!-- Logout Button -->
-    <button
-      type="button"
+    <a
+      href="/Auth/Logout"
       class="top-nav-pill-btn"
-      onclick="handleLogoutConfirm();"
+      onclick="handleLogoutConfirm(); return false;"
       title="Keluar / Logout Akun"
-      style="border-color: rgba(239, 68, 68, 0.4); color: #f87171; background: rgba(239, 68, 68, 0.12); border-style: solid; border-width: 1px;"
+      style="border-color: rgba(239, 68, 68, 0.4); color: #f87171; background: rgba(239, 68, 68, 0.12); border-style: solid; border-width: 1px; text-decoration: none;"
     >
       <i data-lucide="log-out" style="width: 15px; height: 15px; color: #f87171;"></i>
       <span>Keluar</span>
-    </button>
+    </a>
   </div>
 </header>

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,14 +13,28 @@ using QWorks.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Set default culture to Indonesian (id-ID)
+var defaultCulture = new System.Globalization.CultureInfo("id-ID");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
+
+// Configure DataProtection to persist keys within application directory
+string keysFolder = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "keys");
+if (!Directory.Exists(keysFolder)) Directory.CreateDirectory(keysFolder);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysFolder))
+    .SetApplicationName("QWorksApp");
+
 // Add MVC services
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
-// Configure SQLite Database
-string dbPath = Path.Combine(builder.Environment.ContentRootPath, "qworks.db");
+// Configure SQL Server Database
+string finalConnString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("ConnectionString 'DefaultConnection' tidak ditemukan di appsettings.json.");
+
 builder.Services.AddDbContext<QWorksDbContext>(options =>
-    options.UseSqlite($"Data Source={dbPath}"));
+    options.UseSqlServer(finalConnString));
 
 // Dependency Injection
 builder.Services.AddScoped<IOvertimeCalculatorService, OvertimeCalculatorService>();
@@ -36,6 +51,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromHours(12);
         options.SlidingExpiration = true;
         options.Cookie.Name = "QWorks.AuthCookie";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
     });
 
 builder.Services.AddAuthorization();
@@ -64,6 +82,12 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Dashboard/Index");
     app.UseHsts();
 }
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+                       Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
 
 app.UseStaticFiles();
 

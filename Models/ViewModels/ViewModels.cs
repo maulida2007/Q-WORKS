@@ -149,6 +149,16 @@ namespace QWorks.Models.ViewModels
         public List<string> AllowedPlants { get; set; } = new();
         public int CurrentPage { get; set; } = 1;
         public int TotalPages { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+    }
+
+    public class MasterPekerjaImportResult
+    {
+        public int TotalRows { get; set; }
+        public int SuccessCount { get; set; }
+        public int FailedCount { get; set; }
+        public List<string> ErrorDetails { get; set; } = new();
+        public List<User> ValidEmployees { get; set; } = new();
     }
 
     public class RiwayatPenginputViewModel
@@ -156,10 +166,17 @@ namespace QWorks.Models.ViewModels
         public List<OvertimeRequest> Records { get; set; } = new();
         public int TotalRecords { get; set; }
         public string? SearchKeyword { get; set; }
-        public string? SelectedPlant { get; set; } = "ALL";
-        public string? SelectedSubmitter { get; set; } = "ALL";
-        public List<string> SubmitterNames { get; set; } = new();
+        public List<string> SelectedMonths { get; set; } = new();
+        public List<string> SelectedDays { get; set; } = new();
+        public List<string> SelectedShifts { get; set; } = new();
+        public List<string> SelectedPlants { get; set; } = new();
+        public List<string> SelectedEmployees { get; set; } = new();
+
+        public List<string> MonthList { get; set; } = new();
+        public List<string> DayList { get; set; } = new();
+        public List<string> ShiftList { get; set; } = new();
         public List<string> PlantList { get; set; } = new();
+        public List<User> EmployeeList { get; set; } = new();
     }
 
     // Calculation DTOs
@@ -198,4 +215,22 @@ namespace QWorks.Models.ViewModels
         string JamWaktu,
         string TulFormulaBreakdown
     );
+
+    public class SlicerViewModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string HeaderTitle { get; set; } = string.Empty;
+        public List<SlicerItemViewModel> Items { get; set; } = new();
+        public bool AlignRight { get; set; } = false;
+    }
+
+    public class SlicerItemViewModel
+    {
+        public string Value { get; set; } = string.Empty;
+        public string MainText { get; set; } = string.Empty;
+        public string SubText { get; set; } = string.Empty;
+        public bool IsChecked { get; set; } = false;
+    }
 }

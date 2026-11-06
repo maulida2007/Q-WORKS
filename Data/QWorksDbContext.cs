@@ -20,6 +20,15 @@ namespace QWorks.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // SQL Server: TimeSpan columns stored as TIME(7)
+            modelBuilder.Entity<Shift>()
+                .Property(s => s.StartTime)
+                .HasColumnType("time");
+
+            modelBuilder.Entity<Shift>()
+                .Property(s => s.EndTime)
+                .HasColumnType("time");
+
             modelBuilder.Entity<Shift>().HasIndex(s => s.ShiftName).IsUnique();
             modelBuilder.Entity<User>().HasIndex(u => u.Nik).IsUnique();
             modelBuilder.Entity<OvertimeRequest>().HasIndex(o => o.RequestNumber).IsUnique();

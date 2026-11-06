@@ -178,7 +178,8 @@ window.onFilterMonthChange = function (monthSelect, daySelectId) {
     }
   }
 
-  const currentDay = daySelect.value;
+  const rawDay = daySelect.value || "";
+  const currentDay = rawDay.replace(/tanggal\s*/i, "").trim();
   while (daySelect.options.length > 1) {
     daySelect.remove(1);
   }
@@ -192,7 +193,8 @@ window.onFilterMonthChange = function (monthSelect, daySelectId) {
     daySelect.appendChild(opt);
   }
 
-  if (parseInt(currentDay, 10) > daysInMonth) {
+  const currentNum = parseInt(currentDay, 10);
+  if (!isNaN(currentNum) && currentNum > daysInMonth) {
     daySelect.value = "";
   }
 
@@ -200,4 +202,12 @@ window.onFilterMonthChange = function (monthSelect, daySelectId) {
     monthSelect.form.submit();
   }
 };
+
+// 7. Logout Handler
+function handleLogoutConfirm() {
+  if (confirm("Apakah Anda yakin ingin keluar (Logout) dari aplikasi Q-WORKS?")) {
+    window.location.href = "/Auth/Logout";
+  }
+}
+window.handleLogoutConfirm = handleLogoutConfirm;
 

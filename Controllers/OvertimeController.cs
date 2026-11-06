@@ -46,6 +46,11 @@ namespace QWorks.Controllers
             var empQuery = _context.Users.Where(u => u.Role == "karyawan" && u.IsActive);
             if (user.IsKaryawan)
             {
+                // Hak Akses Karyawan: Karyawan hanya boleh menginput lembur miliknya sendiri
+                empQuery = empQuery.Where(u => u.Nik == user.Npk);
+            }
+            else
+            {
                 empQuery = empQuery.Where(u => allowedPlants.Contains(u.Plant));
             }
 
@@ -104,16 +109,33 @@ namespace QWorks.Controllers
             [FromForm] double? manualJam,
             [FromForm] bool isHoliday,
             [FromForm] string reason,
-            [FromForm] List<string> selectedNpks)
+            [FromForm] List<string>? selectedNpks,
+            [FromForm] string? npks)
         {
             var user = _authService.GetCurrentUser();
             if (user == null) return RedirectToAction("Login", "Auth");
 
-            if (selectedNpks == null || selectedNpks.Count == 0)
+            if (user.IsKaryawan)
             {
-                TempData["ToastMessage"] = "Pilih minimal 1 orang pekerja.";
-                TempData["ToastType"] = "warning";
-                return RedirectToAction("Input");
+                // Hak Akses Karyawan: Karyawan HANYA boleh menginput data lembur miliknya sendiri.
+                // Identitas pemilik data ditentukan berdasarkan identitas terautentikasi di server.
+                // Parameter browser tidak boleh dipercaya sebagai dasar otorisasi.
+                selectedNpks = new List<string> { user.Npk };
+                plant = user.Plant;
+            }
+            else
+            {
+                if ((selectedNpks == null || selectedNpks.Count == 0) && !string.IsNullOrWhiteSpace(npks))
+                {
+                    selectedNpks = npks.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                }
+
+                if (selectedNpks == null || selectedNpks.Count == 0)
+                {
+                    TempData["ToastMessage"] = "Pilih minimal 1 orang pekerja.";
+                    TempData["ToastType"] = "warning";
+                    return RedirectToAction("Input");
+                }
             }
 
             DateTime workDt;
@@ -168,8 +190,9 @@ namespace QWorks.Controllers
                     UserId = worker.Id,
                     UserNpk = worker.Nik,
                     UserName = worker.Name,
-                    Plant = plant,
-                    Department = dept,
+                    Plant = !string.IsNullOrWhiteSpace(worker.Plant) ? worker.Plant : plant,
+                    Department = !string.IsNullOrWhiteSpace(worker.Department) ? worker.Department : dept,
+                    ShiftId = shiftName.Contains("2") ? 2 : 1,
                     ShiftName = shiftName,
                     WorkDate = workDt,
                     Month = month,
@@ -256,69 +279,31 @@ namespace QWorks.Controllers
                                          r.RequestNumber.ToLower().Contains(kw));
             }
 
-            // Filters (safely filter out empty strings and whitespace)
-            var selMonths = months?.Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m.Trim()).ToList() ?? new List<string>();
-            var selDays = days?.Where(d => !string.IsNullOrWhiteSpace(d)).Select(d => d.Trim()).ToList() ?? new List<string>();
-            var selShifts = shifts?.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).ToList() ?? new List<string>();
-            var selPlants = plants?.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim()).ToList() ?? new List<string>();
-            var selEmployees = employees?.Where(e => !string.IsNullOrWhiteSpace(e)).Select(e => e.Trim()).ToList() ?? new List<string>();
+            // Filters (safely filter out empty strings and placeholder terms)
+            var selMonths = months?.Where(m => !string.IsNullOrWhiteSpace(m) && !m.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !m.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(m => m.Trim()).ToList() ?? new List<string>();
+            var selDays = days?.Where(d => !string.IsNullOrWhiteSpace(d) && !d.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !d.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(d => d.Trim()).ToList() ?? new List<string>();
+            var selShifts = shifts?.Where(s => !string.IsNullOrWhiteSpace(s) && !s.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !s.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(s => s.Trim()).ToList() ?? new List<string>();
+            var selPlants = plants?.Where(p => !string.IsNullOrWhiteSpace(p) && !p.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !p.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(p => p.Trim()).ToList() ?? new List<string>();
+            var selEmployees = employees?.Where(e => !string.IsNullOrWhiteSpace(e) && !e.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !e.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(e => e.Trim()).ToList() ?? new List<string>();
 
-            int maxDays = DashboardController.GetDaysInMonthString(selMonths.FirstOrDefault());
-            var dayList = Enumerable.Range(1, maxDays).Select(d => d.ToString()).ToList();
-
-            // 1. Month Filter
-            if (selMonths.Count > 0)
+            // Scoped employee list based on selected plant or user restrictions
+            var empQuery = _context.Users.Where(u => u.Role == "karyawan" && u.IsActive).OrderBy(u => u.Name).AsQueryable();
+            if (user.IsKaryawan)
             {
-                query = query.Where(r => selMonths.Contains(r.Month));
+                var allowedPlants = _authService.GetAllowedPlants(user);
+                empQuery = empQuery.Where(u => allowedPlants.Contains(u.Plant));
             }
 
-            // 2. Day Filter
-            if (selDays.Count > 0)
+            var normPlants = DashboardController.NormalizePlantCriteria(selPlants);
+            if (normPlants.PlantNames.Count > 0)
             {
-                var dayInts = selDays
-                    .Select(d => int.TryParse(d.Replace("Tanggal ", "").Trim(), out int val) ? val : 0)
-                    .Where(v => v >= 1 && v <= maxDays)
-                    .ToList();
-
-                if (dayInts.Count > 0)
-                {
-                    query = query.Where(r => dayInts.Contains(r.Day));
-                }
+                empQuery = empQuery.Where(u => normPlants.PlantNames.Contains(u.Plant) || normPlants.DeptNames.Contains(u.Department));
             }
 
-            // 3. Shift Filter (match by Name or ID)
-            if (selShifts.Count > 0)
-            {
-                var shiftCriteria = new List<string>();
-                foreach (var s in selShifts)
-                {
-                    shiftCriteria.Add(s);
-                    if (s == "1" || s.Equals("Shift 1", StringComparison.OrdinalIgnoreCase))
-                    {
-                        shiftCriteria.Add("1");
-                        shiftCriteria.Add("Shift 1");
-                    }
-                    else if (s == "2" || s.Equals("Shift 2", StringComparison.OrdinalIgnoreCase))
-                    {
-                        shiftCriteria.Add("2");
-                        shiftCriteria.Add("Shift 2");
-                    }
-                }
-                shiftCriteria = shiftCriteria.Distinct().ToList();
-                query = query.Where(r => shiftCriteria.Contains(r.ShiftName) || shiftCriteria.Contains(r.ShiftId.ToString()));
-            }
+            var empList = await empQuery.ToListAsync();
 
-            // 4. Plant Filter (match by Plant name or Department)
-            if (selPlants.Count > 0)
-            {
-                query = query.Where(r => selPlants.Contains(r.Plant) || selPlants.Contains(r.Department));
-            }
-
-            // 5. Employee Filter (match by NPK or User ID)
-            if (selEmployees.Count > 0)
-            {
-                query = query.Where(r => selEmployees.Contains(r.UserNpk) || selEmployees.Contains(r.UserId.ToString()));
-            }
+            // Apply unified filters with AND logic and dependency handling
+            query = DashboardController.FilterOvertimeQuery(query, ref selMonths, ref selDays, ref selShifts, ref selPlants, ref selEmployees, empList);
 
             var records = await query.OrderByDescending(r => r.WorkDate).ThenByDescending(r => r.CreatedAt).ToListAsync();
 
@@ -326,18 +311,50 @@ namespace QWorks.Controllers
             double totalTul = Math.Round(records.Sum(r => r.TotalTul), 2);
             int uniqueEmps = records.Select(r => r.UserNpk).Distinct().Count();
 
+            int maxDays = DashboardController.GetDaysInMonthString(selMonths.FirstOrDefault());
+            var dayList = Enumerable.Range(1, maxDays).Select(d => d.ToString()).ToList();
+
             // Filter master data
-            var monthList = await _context.OvertimeRequests
+            var dbMonths = await _context.OvertimeRequests
                 .Where(r => !string.IsNullOrEmpty(r.Month))
                 .OrderByDescending(r => r.WorkDate)
                 .Select(r => r.Month)
                 .Distinct()
                 .ToListAsync();
-            if (monthList.Count == 0) monthList = new List<string> { "September 2026" };
 
-            var shiftList = await _context.Shifts.Select(s => s.ShiftName).ToListAsync();
+            var standardMonths = new List<string>
+            {
+                "Oktober 2026",
+                "September 2026",
+                "Agustus 2026",
+                "Juli 2026",
+                "Juni 2026",
+                "Mei 2026",
+                "April 2026",
+                "Maret 2026",
+                "Februari 2026",
+                "Januari 2026"
+            };
+
+            var monthList = new List<string>();
+            foreach (var sm in standardMonths)
+            {
+                if (!monthList.Any(m => m.Equals(sm, StringComparison.OrdinalIgnoreCase)))
+                {
+                    monthList.Add(sm);
+                }
+            }
+            foreach (var dm in dbMonths)
+            {
+                string normalizedDm = DashboardController.NormalizeToIndonesianMonth(dm);
+                if (!string.IsNullOrEmpty(normalizedDm) && !monthList.Any(m => m.Equals(normalizedDm, StringComparison.OrdinalIgnoreCase)))
+                {
+                    monthList.Add(normalizedDm);
+                }
+            }
+
+            var shiftList = await _context.Shifts.Where(s => s.IsActive).Select(s => s.ShiftName).ToListAsync();
             var plantList = _authService.GetAllowedPlants(user);
-            var empList = await _context.Users.Where(u => u.Role == "karyawan").OrderBy(u => u.Name).ToListAsync();
 
             var vm = new RekapOvertimeViewModel
             {
@@ -496,10 +513,53 @@ namespace QWorks.Controllers
 
             req.ShiftName = shiftName;
             req.JamWaktu = jamWaktu;
-            req.JamOvertime = jamOvertime;
-            req.TotalTul = _calcService.CalculateTul(jamOvertime, req.IsHoliday);
             req.Reason = reason;
             req.UpdatedAt = DateTime.UtcNow;
+
+            // Recalculate duration cleanly from raw inputs without double deduction
+            if (!string.IsNullOrWhiteSpace(jamWaktu) && jamWaktu.Contains("-"))
+            {
+                var timeParts = jamWaktu.Split('-');
+                if (timeParts.Length == 2)
+                {
+                    string startStr = timeParts[0].Trim();
+                    string endStr = timeParts[1].Trim();
+                    var calc = _calcService.Calculate(shiftName, req.WorkDate, startStr, endStr, req.IsHoliday);
+                    if (calc.IsValid)
+                    {
+                        req.RawDurationMinutes = calc.RawMinutes;
+                        req.CountedDurationMinutes = calc.CountedMinutes;
+                        req.JamOvertime = calc.JamOvertime;
+                        req.TotalTul = calc.TotalTul;
+                        req.StartTime = _calcService.ParseTime(req.WorkDate, startStr, shiftName);
+                        req.EndTime = _calcService.ParseTime(req.WorkDate, endStr, shiftName);
+                    }
+                    else
+                    {
+                        TempData["ToastMessage"] = calc.ErrorMessage ?? "Perhitungan durasi tidak valid.";
+                        TempData["ToastType"] = "danger";
+                        return RedirectToAction("Rekap");
+                    }
+                }
+            }
+            else if (jamOvertime > 0)
+            {
+                // If manual raw hours were provided
+                var calc = _calcService.CalculateFromManualHours(shiftName, req.WorkDate, jamOvertime, req.IsHoliday);
+                if (calc.IsValid)
+                {
+                    req.RawDurationMinutes = calc.RawMinutes;
+                    req.CountedDurationMinutes = calc.CountedMinutes;
+                    req.JamOvertime = calc.JamOvertime;
+                    req.TotalTul = calc.TotalTul;
+                }
+                else
+                {
+                    TempData["ToastMessage"] = calc.ErrorMessage ?? "Perhitungan durasi tidak valid.";
+                    TempData["ToastType"] = "danger";
+                    return RedirectToAction("Rekap");
+                }
+            }
 
             await _context.SaveChangesAsync();
 
@@ -572,61 +632,30 @@ namespace QWorks.Controllers
                                          r.RequestNumber.ToLower().Contains(kw));
             }
 
-            var selMonths = months?.Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => m.Trim()).ToList() ?? new List<string>();
-            var selDays = days?.Where(d => !string.IsNullOrWhiteSpace(d)).Select(d => d.Trim()).ToList() ?? new List<string>();
-            var selShifts = shifts?.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).ToList() ?? new List<string>();
-            var selPlants = plants?.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim()).ToList() ?? new List<string>();
-            var selEmployees = employees?.Where(e => !string.IsNullOrWhiteSpace(e)).Select(e => e.Trim()).ToList() ?? new List<string>();
+            var selMonths = months?.Where(m => !string.IsNullOrWhiteSpace(m) && !m.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !m.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(m => m.Trim()).ToList() ?? new List<string>();
+            var selDays = days?.Where(d => !string.IsNullOrWhiteSpace(d) && !d.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !d.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(d => d.Trim()).ToList() ?? new List<string>();
+            var selShifts = shifts?.Where(s => !string.IsNullOrWhiteSpace(s) && !s.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !s.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(s => s.Trim()).ToList() ?? new List<string>();
+            var selPlants = plants?.Where(p => !string.IsNullOrWhiteSpace(p) && !p.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !p.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(p => p.Trim()).ToList() ?? new List<string>();
+            var selEmployees = employees?.Where(e => !string.IsNullOrWhiteSpace(e) && !e.Equals("Semua", StringComparison.OrdinalIgnoreCase) && !e.Equals("ALL", StringComparison.OrdinalIgnoreCase)).Select(e => e.Trim()).ToList() ?? new List<string>();
 
-            if (selMonths.Count > 0)
+            // Scoped employee list based on selected plant or user restrictions
+            var empQuery = _context.Users.Where(u => u.Role == "karyawan" && u.IsActive).OrderBy(u => u.Name).AsQueryable();
+            if (user.IsKaryawan)
             {
-                query = query.Where(r => selMonths.Contains(r.Month));
+                var allowedPlants = _authService.GetAllowedPlants(user);
+                empQuery = empQuery.Where(u => allowedPlants.Contains(u.Plant));
             }
 
-            if (selDays.Count > 0)
+            var normPlants = DashboardController.NormalizePlantCriteria(selPlants);
+            if (normPlants.PlantNames.Count > 0)
             {
-                int maxDays = DashboardController.GetDaysInMonthString(selMonths.FirstOrDefault());
-                var dayInts = selDays
-                    .Select(d => int.TryParse(d.Replace("Tanggal ", "").Trim(), out int val) ? val : 0)
-                    .Where(v => v >= 1 && v <= maxDays)
-                    .ToList();
-
-                if (dayInts.Count > 0)
-                {
-                    query = query.Where(r => dayInts.Contains(r.Day));
-                }
+                empQuery = empQuery.Where(u => normPlants.PlantNames.Contains(u.Plant) || normPlants.DeptNames.Contains(u.Department));
             }
 
-            if (selShifts.Count > 0)
-            {
-                var shiftCriteria = new List<string>();
-                foreach (var s in selShifts)
-                {
-                    shiftCriteria.Add(s);
-                    if (s == "1" || s.Equals("Shift 1", StringComparison.OrdinalIgnoreCase))
-                    {
-                        shiftCriteria.Add("1");
-                        shiftCriteria.Add("Shift 1");
-                    }
-                    else if (s == "2" || s.Equals("Shift 2", StringComparison.OrdinalIgnoreCase))
-                    {
-                        shiftCriteria.Add("2");
-                        shiftCriteria.Add("Shift 2");
-                    }
-                }
-                shiftCriteria = shiftCriteria.Distinct().ToList();
-                query = query.Where(r => shiftCriteria.Contains(r.ShiftName) || shiftCriteria.Contains(r.ShiftId.ToString()));
-            }
+            var empList = await empQuery.ToListAsync();
 
-            if (selPlants.Count > 0)
-            {
-                query = query.Where(r => selPlants.Contains(r.Plant) || selPlants.Contains(r.Department));
-            }
-
-            if (selEmployees.Count > 0)
-            {
-                query = query.Where(r => selEmployees.Contains(r.UserNpk) || selEmployees.Contains(r.UserId.ToString()));
-            }
+            // Apply unified filters with AND logic and dependency handling
+            query = DashboardController.FilterOvertimeQuery(query, ref selMonths, ref selDays, ref selShifts, ref selPlants, ref selEmployees, empList);
 
             var records = await query.OrderByDescending(r => r.WorkDate).ToListAsync();
             byte[] bytes = _excelService.ExportRekapOvertime(records);

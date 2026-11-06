@@ -164,120 +164,32 @@ namespace QWorks.Data
                 context.SaveChanges();
             }
 
-            // 5. SEED INITIAL OVERTIME RECORDS
-            if (!context.OvertimeRequests.Any())
+            // 5. OvertimeRequests: tidak di-seed — database dimulai bersih untuk data produksi
+            // Data lembur akan diinput langsung oleh user melalui aplikasi
+
+            // 6. ENSURE INTEGRITY: ShiftId and UserId on all records (jika ada data yang sudah ada)
+            var unlinkedRecords = context.OvertimeRequests.Where(r => r.ShiftId == 0 || r.UserId == 0).ToList();
+            if (unlinkedRecords.Count > 0)
             {
-                var rawData = new[]
+                var shiftDict = context.Shifts.ToDictionary(s => s.ShiftName, s => s.Id);
+                var userDict = context.Users.Where(u => u.Role == "karyawan").ToDictionary(u => u.Nik, u => u.Id);
+
+                foreach (var r in unlinkedRecords)
                 {
-                    // Plant Hose
-                    new { Id = "OT-20260908-001", Plant = "Plant Hose", Nama = "GILANG", Npk = "1747", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-08 09:15:20" },
-                    new { Id = "OT-20260908-002", Plant = "Plant Hose", Nama = "OCHA", Npk = "1796", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-08 09:10:00" },
-                    new { Id = "OT-20260908-003", Plant = "Plant Hose", Nama = "JUNIAR", Npk = "1726", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-08 09:05:00" },
-                    new { Id = "OT-20260908-004", Plant = "Plant Hose", Nama = "MELA", Npk = "1797", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-08 08:50:00" },
-                    new { Id = "OT-20260908-005", Plant = "Plant Hose", Nama = "ALIF", Npk = "1611", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-08 08:40:00" },
-                    new { Id = "OT-20260908-006", Plant = "Plant Hose", Nama = "ISKANDAR", Npk = "1303", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-08 08:30:00" },
-                    new { Id = "OT-20260908-007", Plant = "Plant Hose", Nama = "ARIYANTO", Npk = "0227", Shift = "Shift 2", Date = "2026-09-08", Jam = 2.5, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-08 23:00:00" },
-                    new { Id = "OT-20260908-008", Plant = "Plant Hose", Nama = "DENI", Npk = "1506", Shift = "Shift 2", Date = "2026-09-08", Jam = 2.0, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-08 23:00:00" },
-                    new { Id = "OT-20260907-009", Plant = "Plant Hose", Nama = "INDAH", Npk = "1795", Shift = "Shift 2", Date = "2026-09-07", Jam = 2.0, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-07 23:00:00" },
-                    new { Id = "OT-20260907-010", Plant = "Plant Hose", Nama = "GILANG", Npk = "1747", Shift = "Shift 1", Date = "2026-09-07", Jam = 2.0, Dept = "hose", Kegiatan = "CHECKING", Ts = "2026-09-07 17:00:00" },
-
-                    // Plant Molded
-                    new { Id = "OT-20260908-011", Plant = "Plant Molded", Nama = "KATIM", Npk = "1670", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-08 09:15:20" },
-                    new { Id = "OT-20260908-012", Plant = "Plant Molded", Nama = "SAHRUL", Npk = "1423", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-08 09:10:00" },
-                    new { Id = "OT-20260908-013", Plant = "Plant Molded", Nama = "SALAM", Npk = "1376", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-08 09:05:00" },
-                    new { Id = "OT-20260908-014", Plant = "Plant Molded", Nama = "ANDRY", Npk = "1378", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-08 08:50:00" },
-                    new { Id = "OT-20260908-015", Plant = "Plant Molded", Nama = "MIFTAH", Npk = "1580", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-08 08:40:00" },
-                    new { Id = "OT-20260908-016", Plant = "Plant Molded", Nama = "KELVIN", Npk = "1586", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-08 08:30:00" },
-                    new { Id = "OT-20260908-017", Plant = "Plant Molded", Nama = "YAYANG", Npk = "1392", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-08 17:00:00" },
-                    new { Id = "OT-20260908-018", Plant = "Plant Molded", Nama = "HAMDAN", Npk = "1590", Shift = "Shift 2", Date = "2026-09-08", Jam = 2.5, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-08 23:00:00" },
-                    new { Id = "OT-20260907-019", Plant = "Plant Molded", Nama = "HILMI", Npk = "1728", Shift = "Shift 2", Date = "2026-09-07", Jam = 2.0, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-07 23:00:00" },
-                    new { Id = "OT-20260907-020", Plant = "Plant Molded", Nama = "EKA", Npk = "1707", Shift = "Shift 2", Date = "2026-09-07", Jam = 2.0, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-07 23:00:00" },
-                    new { Id = "OT-20260906-021", Plant = "Plant Molded", Nama = "KATIM", Npk = "1670", Shift = "Shift 1", Date = "2026-09-06", Jam = 3.0, Dept = "molded", Kegiatan = "CHECKING", Ts = "2026-09-06 17:00:00" },
-
-                    // Plant Subcont
-                    new { Id = "OT-20260908-022", Plant = "Plant Subcont", Nama = "KIKI", Npk = "0201", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "subcont", Kegiatan = "GL", Ts = "2026-09-08 09:15:20" },
-                    new { Id = "OT-20260908-023", Plant = "Plant Subcont", Nama = "ANDI", Npk = "0228", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "subcont", Kegiatan = "CHECKING", Ts = "2026-09-08 09:10:00" },
-                    new { Id = "OT-20260908-024", Plant = "Plant Subcont", Nama = "SANDY", Npk = "1459", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "subcont", Kegiatan = "CHECKING", Ts = "2026-09-08 09:05:00" },
-                    new { Id = "OT-20260908-025", Plant = "Plant Subcont", Nama = "SAHRIL", Npk = "1722", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "subcont", Kegiatan = "CHECKING", Ts = "2026-09-08 08:50:00" },
-                    new { Id = "OT-20260907-026", Plant = "Plant Subcont", Nama = "KIKI", Npk = "0201", Shift = "Shift 1", Date = "2026-09-07", Jam = 2.0, Dept = "subcont", Kegiatan = "GL", Ts = "2026-09-07 17:00:00" },
-                    new { Id = "OT-20260907-027", Plant = "Plant Subcont", Nama = "ANDI", Npk = "0228", Shift = "Shift 1", Date = "2026-09-07", Jam = 2.0, Dept = "subcont", Kegiatan = "CHECKING", Ts = "2026-09-07 17:00:00" },
-
-                    // Plant Lab Mixing
-                    new { Id = "OT-20260908-028", Plant = "Plant Lab Mixing", Nama = "RAYHAN", Npk = "1705", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "lab-mixing", Kegiatan = "TESTING", Ts = "2026-09-08 09:15:20" },
-                    new { Id = "OT-20260908-029", Plant = "Plant Lab Mixing", Nama = "ACA", Npk = "0031", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "lab-mixing", Kegiatan = "TESTING", Ts = "2026-09-08 09:10:00" },
-                    new { Id = "OT-20260908-030", Plant = "Plant Lab Mixing", Nama = "DANDA", Npk = "1379", Shift = "Shift 2", Date = "2026-09-08", Jam = 2.5, Dept = "lab-mixing", Kegiatan = "MIXING", Ts = "2026-09-08 23:00:00" },
-                    new { Id = "OT-20260907-031", Plant = "Plant Lab Mixing", Nama = "RAYHAN", Npk = "1705", Shift = "Shift 1", Date = "2026-09-07", Jam = 2.0, Dept = "lab-mixing", Kegiatan = "TESTING", Ts = "2026-09-07 17:00:00" },
-
-                    // Plant RVI
-                    new { Id = "OT-20260908-032", Plant = "Plant RVI", Nama = "ARIF", Npk = "1443", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-08 09:15:20" },
-                    new { Id = "OT-20260908-033", Plant = "Plant RVI", Nama = "WILLY", Npk = "0052", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-08 09:10:00" },
-                    new { Id = "OT-20260908-034", Plant = "Plant RVI", Nama = "ACU", Npk = "1353", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-08 09:05:00" },
-                    new { Id = "OT-20260908-035", Plant = "Plant RVI", Nama = "WAHYU", Npk = "1427", Shift = "Shift 1", Date = "2026-09-08", Jam = 1.5, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-08 08:50:00" },
-                    new { Id = "OT-20260908-036", Plant = "Plant RVI", Nama = "KEKEN", Npk = "1460", Shift = "Shift 2", Date = "2026-09-08", Jam = 2.5, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-08 23:00:00" },
-                    new { Id = "OT-20260908-037", Plant = "Plant RVI", Nama = "WIKATMA", Npk = "0458", Shift = "Shift 2", Date = "2026-09-08", Jam = 2.0, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-08 23:00:00" },
-                    new { Id = "OT-20260907-038", Plant = "Plant RVI", Nama = "ROBI", Npk = "1422", Shift = "Shift 2", Date = "2026-09-07", Jam = 2.0, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-07 23:00:00" },
-                    new { Id = "OT-20260907-039", Plant = "Plant RVI", Nama = "RIAN", Npk = "1659", Shift = "Shift 1", Date = "2026-09-07", Jam = 2.0, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-07 17:00:00" },
-                    new { Id = "OT-20260906-040", Plant = "Plant RVI", Nama = "RIDWAN", Npk = "1520", Shift = "Shift 2", Date = "2026-09-06", Jam = 3.0, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-06 23:00:00" },
-                    new { Id = "OT-20260905-041", Plant = "Plant RVI", Nama = "SUHDIN", Npk = "1800", Shift = "Shift 2", Date = "2026-09-05", Jam = 2.0, Dept = "rvi", Kegiatan = "CHECKING", Ts = "2026-09-05 23:00:00" },
-
-                    // Plant QRE
-                    new { Id = "OT-20260909-042", Plant = "Plant QRE", Nama = "SADIYAH", Npk = "0222", Shift = "Shift 1", Date = "2026-09-09", Jam = 2.5, Dept = "qre", Kegiatan = "CHECKING", Ts = "2026-09-09 17:00:00" },
-                    new { Id = "OT-20260908-043", Plant = "Plant QRE", Nama = "ATIM", Npk = "1321", Shift = "Shift 1", Date = "2026-09-08", Jam = 2.0, Dept = "qre", Kegiatan = "PENGUKURAN", Ts = "2026-09-08 17:30:00" },
-                    new { Id = "OT-20260907-044", Plant = "Plant QRE", Nama = "AHMAD", Npk = "1605", Shift = "Shift 2", Date = "2026-09-07", Jam = 3.0, Dept = "qre", Kegiatan = "VALIDASI SAMPLE", Ts = "2026-09-07 23:00:00" }
-                };
-
-                string[] monthNames = { "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember" };
-
-                var records = new List<OvertimeRequest>();
-                foreach (var item in rawData)
-                {
-                    DateTime workDt = DateTime.Parse(item.Date);
-                    bool isHoliday = calcService.IsWeekendOrHoliday(workDt);
-                    double tul = calcService.CalculateTul(item.Jam, isHoliday);
-                    string jamWaktu = calcService.GetFallbackJamWaktu(item.Shift, item.Jam, isHoliday);
-                    string month = $"{monthNames[workDt.Month - 1]} {workDt.Year}";
-
-                    DateTime parsedTs;
-                    if (!DateTime.TryParse(item.Ts, out parsedTs))
+                    if (r.ShiftId == 0 && shiftDict.TryGetValue(r.ShiftName, out int sid))
                     {
-                        parsedTs = workDt.AddHours(17);
+                        r.ShiftId = sid;
+                    }
+                    else if (r.ShiftId == 0)
+                    {
+                        r.ShiftId = r.ShiftName.Contains("2") ? 2 : 1;
                     }
 
-                    records.Add(new OvertimeRequest
+                    if (r.UserId == 0 && userDict.TryGetValue(r.UserNpk, out int uid))
                     {
-                        RequestNumber = item.Id,
-                        UserName = item.Nama,
-                        UserNpk = item.Npk,
-                        Plant = item.Plant,
-                        Department = item.Dept,
-                        ShiftName = item.Shift,
-                        WorkDate = workDt,
-                        Month = month,
-                        Day = workDt.Day,
-                        JamOvertime = item.Jam,
-                        TotalTul = tul,
-                        IsHoliday = isHoliday,
-                        DayType = isHoliday ? "libur" : "kerja",
-                        JamWaktu = jamWaktu,
-                        OvertimeType = isHoliday ? "OFF_DAY" : "POST_SHIFT",
-                        OvertimeTypeLabel = isHoliday ? "Lembur Hari Libur (H.O.T)" : "Post-Shift",
-                        RawDurationMinutes = (int)Math.Round(item.Jam * 60),
-                        CountedDurationMinutes = (int)Math.Round(item.Jam * 60),
-                        IsTolerance = false,
-                        Reason = item.Kegiatan,
-                        Status = "Approved",
-                        ApproverName = "Supervisor QC",
-                        ApprovedAt = parsedTs,
-                        CreatedByName = "Admin",
-                        CreatedByNpk = "ADMIN-01",
-                        CreatedByRole = "admin",
-                        CreatedByPlant = item.Plant,
-                        CreatedAt = parsedTs,
-                        UpdatedAt = parsedTs
-                    });
+                        r.UserId = uid;
+                    }
                 }
-
-                context.OvertimeRequests.AddRange(records);
                 context.SaveChanges();
             }
         }

@@ -1,8 +1,36 @@
 @model InputOvertimeViewModel
+@inject IAuthService AuthService
 @{
     ViewData["Title"] = "Input Data Lembur";
     Layout = "_Layout";
+    var currentUser = AuthService.GetCurrentUser();
+    bool isKaryawan = currentUser?.IsKaryawan == true;
+    bool isAdmin = currentUser?.IsAdmin == true;
 }
+@functions {
+    public static readonly (string Jam, string Tul)[] TabelTulKerja = new[]
+    {
+        ("0", "0"), ("1", "1,5"), ("1,25", "2"), ("1,5", "2,5"), ("1,75", "3"),
+        ("2", "3,5"), ("2,25", "4"), ("2,5", "4,5"), ("2,75", "5"), ("3", "5,5"),
+        ("3,25", "6"), ("3,5", "6,5"), ("3,75", "7"), ("4", "7,5"), ("4,5", "8,5"),
+        ("4,75", "9"), ("5", "9,5"), ("5,5", "10,5"), ("6", "11,5"), ("6,5", "12,5"),
+        ("7", "13,5"), ("7,5", "14,5"), ("8", "15,5"), ("8,5", "16,5"), ("9", "17,5"),
+        ("9,5", "18,5"), ("10", "19,5"), ("10,5", "20,5"), ("11", "21,5"), ("11,5", "22,5"),
+        ("12", "23,5"), ("12,5", "24,5"), ("13", "25,5"), ("13,5", "26,5"), ("14", "27,5"),
+        ("14,5", "28,5"), ("15", "29,5"), ("15,5", "30,5"), ("16", "31,5"), ("16,5", "32,5"),
+        ("17", "33,5"), ("17,5", "34,5"), ("18", "35,5"), ("18,5", "36,5"), ("19", "37,5"),
+        ("19,5", "38,5"), ("20", "39,5"), ("20,5", "40,5"), ("21", "41,5"), ("21,5", "42,5"),
+        ("22", "43,5"), ("22,5", "44,5"), ("23", "45,5"), ("23,5", "46,5"), ("24", "47,5")
+    };
+
+    public static readonly (string Jam, string Tul)[] TabelTulLibur = new[]
+    {
+        ("0", "0"), ("1", "2"), ("1,5", "3"), ("2", "4"), ("2,5", "5"),
+        ("3", "6"), ("3,5", "7"), ("4", "8"), ("4,5", "9"), ("5", "10"),
+        ("5,5", "11"), ("6", "12 (Maks)")
+    };
+}
+
 
 <div class="page-content" style="max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
 
@@ -67,185 +95,284 @@
 
       <!-- 1. PLANT -->
       <div class="form-group" style="margin-bottom: 0;">
-        <label class="form-label" style="font-size: 0.86rem; font-weight: 800; color: #FFF8E7; letter-spacing: 0.04em; margin-bottom: 6px;">
-          <i data-lucide="building-2" style="width: 15px; height: 15px; display: inline; margin-right: 6px; color: #00d2ff;"></i>
-          PLANT
-        </label>
-        <select
-          name="plant"
-          id="plantSelect"
-          class="form-select"
-          required
-          style="padding: 11px 16px; font-size: 0.92rem; background: rgba(10, 22, 45, 0.85); border-radius: 8px; height: 44px; width: 100%; border: 1px solid rgba(67, 139, 196, 0.35); color: #FFF8E7;"
-          onchange="onPlantChange();"
-        >
-          <option value="">- Pilih plant -</option>
-          @foreach (var p in Model.AllowedPlants)
-          {
-            <option value="@p" selected="@(p == Model.DefaultPlant)">@p</option>
-          }
-        </select>
-      </div>
-
-      <!-- 2. NAMA KARYAWAN (SEARCHABLE SELECTOR) -->
-      <div class="form-group" style="margin-bottom: 0; position: relative;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <label class="form-label" style="font-size: 0.86rem; font-weight: 800; color: #FFF8E7; letter-spacing: 0.04em; margin-bottom: 0;">
-            <i data-lucide="user" style="width: 15px; height: 15px; display: inline; margin-right: 6px; color: #00d2ff;"></i>
-            NAMA KARYAWAN
+            <i data-lucide="building-2" style="width: 15px; height: 15px; display: inline; margin-right: 6px; color: #00d2ff;"></i>
+            PLANT
           </label>
-          <span style="font-size: 0.76rem; color: #8CC1E9;" id="employeeCountBadge">
-            @Model.AvailableEmployees.Count Karyawan Terdaftar
-          </span>
+          @if (isKaryawan)
+          {
+            <span style="font-size: 0.72rem; color: #34d399; font-weight: 700; background: rgba(52, 211, 153, 0.12); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(52, 211, 153, 0.25);">
+              ✓ Terisi Otomatis
+            </span>
+          }
         </div>
 
-        <!-- Trigger Box -->
-        <div
-          id="empSelectorTrigger"
-          onclick="toggleEmpDropdown();"
-          style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            height: 44px;
-            background: rgba(10, 22, 45, 0.95);
-            border: 1.5px solid rgba(67, 139, 196, 0.45);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            box-sizing: border-box;
-          "
-        >
-          <span id="selectedEmpDisplay" style="font-size: 0.92rem; font-weight: 600; color: #FFF8E7;">
-            - Pilih / Cari Nama Karyawan -
-          </span>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <i data-lucide="search" style="width: 14px; height: 14px; color: #8CC1E9;"></i>
-            <i data-lucide="chevron-down" id="empDropdownChevron" style="width: 16px; height: 16px; color: #8CC1E9; transition: transform 0.2s ease;"></i>
+        @if (isKaryawan)
+        {
+          <input type="hidden" name="plant" id="plantSelect" value="@currentUser?.Plant" />
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              padding: 0 16px;
+              font-size: 0.92rem;
+              font-weight: 700;
+              background: rgba(10, 22, 45, 0.65);
+              border-radius: 8px;
+              height: 44px;
+              width: 100%;
+              border: 1px solid rgba(67, 139, 196, 0.3);
+              color: #FFF8E7;
+              box-sizing: border-box;
+              gap: 8px;
+            "
+          >
+            <i data-lucide="building-2" style="width: 16px; height: 16px; color: #38bdf8;"></i>
+            <span>@(currentUser?.Plant ?? Model.DefaultPlant)</span>
+          </div>
+        }
+        else
+        {
+          <select
+            name="plant"
+            id="plantSelect"
+            class="form-select"
+            required
+            style="padding: 11px 16px; font-size: 0.92rem; background: rgba(10, 22, 45, 0.85); border-radius: 8px; height: 44px; width: 100%; border: 1px solid rgba(67, 139, 196, 0.35); color: #FFF8E7;"
+            onchange="onPlantChange();"
+          >
+            <option value="">- Pilih plant -</option>
+            @foreach (var p in Model.AllowedPlants)
+            {
+              <option value="@p" selected="@(p == Model.DefaultPlant)">@p</option>
+            }
+          </select>
+        }
+      </div>
+
+      <!-- 2. NAMA KARYAWAN -->
+      @if (isKaryawan)
+      {
+        <!-- Karyawan: Nama & NPK Otomatis Terkunci Sesuai Akun Login -->
+        <input type="hidden" name="npks" id="selectedNpkHidden" value="@currentUser?.Npk" required />
+        <input type="hidden" name="employeeName" id="selectedNameHidden" value="@currentUser?.Name" />
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="font-size: 0.86rem; font-weight: 800; color: #FFF8E7; letter-spacing: 0.04em; margin-bottom: 0;">
+              <i data-lucide="user" style="width: 15px; height: 15px; display: inline; margin-right: 6px; color: #00d2ff;"></i>
+              NAMA KARYAWAN
+            </label>
+            <span style="font-size: 0.72rem; color: #34d399; font-weight: 700; background: rgba(52, 211, 153, 0.12); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(52, 211, 153, 0.25);">
+              ✓ Terisi Otomatis
+            </span>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 0 16px;
+              height: 44px;
+              background: rgba(10, 22, 45, 0.65);
+              border: 1px solid rgba(67, 139, 196, 0.3);
+              border-radius: 8px;
+              box-sizing: border-box;
+            "
+          >
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div
+                style="
+                  width: 28px;
+                  height: 28px;
+                  border-radius: 50%;
+                  background: linear-gradient(135deg, rgba(0, 136, 255, 0.3) 0%, rgba(2, 132, 199, 0.2) 100%);
+                  border: 1px solid rgba(0, 210, 255, 0.4);
+                  color: #FFF8E7;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 0.78rem;
+                  font-weight: 800;
+                  flex-shrink: 0;
+                "
+              >
+                @(string.IsNullOrEmpty(currentUser?.Name) ? "K" : currentUser.Name.Substring(0, 1).ToUpper())
+              </div>
+              <span id="selectedEmpDisplay" style="font-size: 0.92rem; font-weight: 700; color: #FFF8E7;">
+                @currentUser?.Name
+              </span>
+            </div>
+            <span style="font-size: 0.82rem; color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-weight: 700; background: rgba(14, 165, 233, 0.12); padding: 2px 10px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+              NPK: @currentUser?.Npk
+            </span>
           </div>
         </div>
+      }
+      else
+      {
+        <!-- Admin: Searchable Selector untuk Memilih Karyawan Mana Saja -->
+        <div class="form-group" style="margin-bottom: 0; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="font-size: 0.86rem; font-weight: 800; color: #FFF8E7; letter-spacing: 0.04em; margin-bottom: 0;">
+              <i data-lucide="user" style="width: 15px; height: 15px; display: inline; margin-right: 6px; color: #00d2ff;"></i>
+              NAMA KARYAWAN
+            </label>
+            <span style="font-size: 0.76rem; color: #8CC1E9;" id="employeeCountBadge">
+              @Model.AvailableEmployees.Count Karyawan Terdaftar
+            </span>
+          </div>
 
-        <!-- Dropdown Popup with Integrated Search Bar -->
-        <div
-          id="empDropdownPopup"
-          style="
-            display: none;
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            right: 0;
-            z-index: 200;
-            background: linear-gradient(180deg, #091a38 0%, #061124 100%);
-            border: 1.5px solid rgba(56, 189, 248, 0.45);
-            border-radius: 10px;
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 16px rgba(0, 136, 255, 0.25);
-            overflow: hidden;
-          "
-        >
-          <!-- Search Input -->
-          <div style="padding: 10px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: rgba(0, 40, 85, 0.4);">
-            <div style="position: relative; display: flex; align-items: center;">
-              <i data-lucide="search" style="width: 14px; height: 14px; color: #38bdf8; position: absolute; left: 10px;"></i>
-              <input
-                type="text"
-                id="empSearchInput"
-                onkeyup="filterEmpList();"
-                placeholder="Cari nama karyawan..."
-                style="
-                  width: 100%;
-                  height: 34px;
-                  padding: 0 10px 0 32px;
-                  background: rgba(10, 22, 45, 0.95);
-                  border: 1px solid rgba(56, 189, 248, 0.35);
-                  border-radius: 6px;
-                  color: #FFF8E7;
-                  font-size: 0.84rem;
-                  outline: none;
-                  box-sizing: border-box;
-                "
-              />
+          <!-- Trigger Box -->
+          <div
+            id="empSelectorTrigger"
+            onclick="toggleEmpDropdown();"
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 0 16px;
+              height: 44px;
+              background: rgba(10, 22, 45, 0.95);
+              border: 1.5px solid rgba(67, 139, 196, 0.45);
+              border-radius: 8px;
+              cursor: pointer;
+              transition: all 0.15s ease;
+              box-sizing: border-box;
+            "
+          >
+            <span id="selectedEmpDisplay" style="font-size: 0.92rem; font-weight: 600; color: #FFF8E7;">
+              - Pilih / Cari Nama Karyawan -
+            </span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="search" style="width: 14px; height: 14px; color: #8CC1E9;"></i>
+              <i data-lucide="chevron-down" id="empDropdownChevron" style="width: 16px; height: 16px; color: #8CC1E9; transition: transform 0.2s ease;"></i>
             </div>
           </div>
 
-          <!-- Employee List -->
-          <div id="empListContainer" style="max-height: 220px; overflow-y: auto; padding: 4px 0;">
-            @foreach (var emp in Model.AvailableEmployees)
-            {
-              <div
-                class="emp-option-item"
-                data-npk="@emp.Npk"
-                data-name="@emp.Name"
-                data-plant="@emp.Plant"
-                data-shift="@(emp.Shift ?? "Shift 1")"
-                onclick="selectEmployee('@emp.Name', '@emp.Npk', '@emp.Plant', '@(emp.Shift ?? "Shift 1")');"
-                style="
-                  display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  padding: 8px 14px;
-                  cursor: pointer;
-                  transition: background 0.12s ease;
-                "
-              >
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <div
-                    style="
-                      width: 28px;
-                      height: 28px;
-                      border-radius: 50%;
-                      background: rgba(255, 255, 255, 0.08);
-                      border: 1px solid rgba(255, 255, 255, 0.15);
-                      color: #ffffff;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      font-size: 0.76rem;
-                      font-weight: 800;
-                      flex-shrink: 0;
-                    "
-                  >
-                    @(string.IsNullOrEmpty(emp.Name) ? "U" : emp.Name.Substring(0, 1).ToUpper())
+          <!-- Dropdown Popup with Integrated Search Bar -->
+          <div
+            id="empDropdownPopup"
+            style="
+              display: none;
+              position: absolute;
+              top: calc(100% + 4px);
+              left: 0;
+              right: 0;
+              z-index: 200;
+              background: linear-gradient(180deg, #091a38 0%, #061124 100%);
+              border: 1.5px solid rgba(56, 189, 248, 0.45);
+              border-radius: 10px;
+              box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 16px rgba(0, 136, 255, 0.25);
+              overflow: hidden;
+            "
+          >
+            <!-- Search Input -->
+            <div style="padding: 10px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: rgba(0, 40, 85, 0.4);">
+              <div style="position: relative; display: flex; align-items: center;">
+                <i data-lucide="search" style="width: 14px; height: 14px; color: #38bdf8; position: absolute; left: 10px;"></i>
+                <input
+                  type="text"
+                  id="empSearchInput"
+                  onkeyup="filterEmpList();"
+                  placeholder="Cari nama karyawan..."
+                  style="
+                    width: 100%;
+                    height: 34px;
+                    padding: 0 10px 0 32px;
+                    background: rgba(10, 22, 45, 0.95);
+                    border: 1px solid rgba(56, 189, 248, 0.35);
+                    border-radius: 6px;
+                    color: #FFF8E7;
+                    font-size: 0.84rem;
+                    outline: none;
+                    box-sizing: border-box;
+                  "
+                />
+              </div>
+            </div>
+
+            <!-- Employee List -->
+            <div id="empListContainer" style="max-height: 220px; overflow-y: auto; padding: 4px 0;">
+              @foreach (var emp in Model.AvailableEmployees)
+              {
+                <div
+                  class="emp-option-item"
+                  data-npk="@emp.Npk"
+                  data-name="@emp.Name"
+                  data-plant="@emp.Plant"
+                  data-shift="@(emp.Shift ?? "Shift 1")"
+                  onclick="selectEmployee('@emp.Name', '@emp.Npk', '@emp.Plant', '@(emp.Shift ?? "Shift 1")');"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 8px 14px;
+                    cursor: pointer;
+                    transition: background 0.12s ease;
+                  "
+                >
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div
+                      style="
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 50%;
+                        background: rgba(255, 255, 255, 0.08);
+                        border: 1px solid rgba(255, 255, 255, 0.15);
+                        color: #ffffff;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 0.76rem;
+                        font-weight: 800;
+                        flex-shrink: 0;
+                      "
+                    >
+                      @(string.IsNullOrEmpty(emp.Name) ? "U" : emp.Name.Substring(0, 1).ToUpper())
+                    </div>
+                    <span style="font-size: 0.88rem; font-weight: 600; color: #e2e8f0;">
+                      @emp.Name
+                    </span>
                   </div>
-                  <span style="font-size: 0.88rem; font-weight: 600; color: #e2e8f0;">
-                    @emp.Name
+                  <span style="font-size: 0.76rem; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">
+                    @emp.Npk
                   </span>
                 </div>
-                <span style="font-size: 0.76rem; color: #38bdf8; font-family: 'JetBrains Mono', monospace;">
-                  @emp.Npk
-                </span>
-              </div>
+              }
+            </div>
+          </div>
+
+          <!-- Hidden input for selected employee npks -->
+          <input type="hidden" name="npks" id="selectedNpkHidden" required />
+          <input type="hidden" name="employeeName" id="selectedNameHidden" />
+
+          <!-- Quick chips -->
+          <div id="quickChipsContainer" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+            @foreach (var emp in Model.AvailableEmployees.Take(8))
+            {
+              <button
+                type="button"
+                onclick="selectEmployee('@emp.Name', '@emp.Npk', '@emp.Plant', '@(emp.Shift ?? "Shift 1")');"
+                style="
+                  background-color: rgba(255, 255, 255, 0.04);
+                  border: 1px solid rgba(140, 193, 233, 0.18);
+                  color: #8CC1E9;
+                  font-size: 0.78rem;
+                  font-weight: 500;
+                  padding: 4px 10px;
+                  border-radius: 6px;
+                  cursor: pointer;
+                "
+              >
+                @emp.Name
+              </button>
             }
           </div>
         </div>
-
-        <!-- Hidden input for selected employee npks -->
-        <input type="hidden" name="npks" id="selectedNpkHidden" required />
-        <input type="hidden" name="employeeName" id="selectedNameHidden" />
-
-        <!-- Quick chips -->
-        <div id="quickChipsContainer" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
-          @foreach (var emp in Model.AvailableEmployees.Take(8))
-          {
-            <button
-              type="button"
-              onclick="selectEmployee('@emp.Name', '@emp.Npk', '@emp.Plant', '@(emp.Shift ?? "Shift 1")');"
-              style="
-                background-color: rgba(255, 255, 255, 0.04);
-                border: 1px solid rgba(140, 193, 233, 0.18);
-                color: #8CC1E9;
-                font-size: 0.78rem;
-                font-weight: 500;
-                padding: 4px 10px;
-                border-radius: 6px;
-                cursor: pointer;
-              "
-            >
-              @emp.Name
-            </button>
-          }
-        </div>
-      </div>
+      }
 
       <!-- ROW: NPK & SHIFT -->
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -263,6 +390,7 @@
           <input
             type="text"
             id="npkDisplayInput"
+            value="@(isKaryawan ? currentUser?.Npk : "")"
             placeholder="NPK Karyawan"
             readonly
             style="
@@ -360,17 +488,17 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
         <!-- 5. TGL OVERTIME & TIPE HARI -->
         <div class="form-group" style="margin-bottom: 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; min-height: 22px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; min-height: 32px;">
             <label class="form-label" style="font-size: 0.85rem; font-weight: 800; color: #FFF8E7; letter-spacing: 0.04em; margin-bottom: 0; white-space: nowrap;">
               <i data-lucide="calendar" style="width: 15px; height: 15px; display: inline; margin-right: 6px; color: #00d2ff;"></i>
               TGL SHIFT / LEMBUR
             </label>
-            <div style="display: flex; gap: 4px;">
+            <div style="display: flex; gap: 8px;">
               <button
                 type="button"
                 id="dotBtn"
                 onclick="setDayType(false);"
-                style="padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 800; cursor: pointer; border: 1px solid #00d2ff; background: rgba(0, 136, 255, 0.4); color: #FFF8E7;"
+                style="padding: 6px 16px; border-radius: 6px; font-size: 0.88rem; font-weight: 800; letter-spacing: 0.04em; cursor: pointer; border: 1.5px solid #00d2ff; background: linear-gradient(135deg, rgba(0, 136, 255, 0.45) 0%, rgba(2, 132, 199, 0.3) 100%); color: #ffffff; box-shadow: 0 0 10px rgba(0, 210, 255, 0.35); transition: all 0.2s ease;"
                 title="D.O.T (Hari Kerja: Jam 1: 1.5x, Jam 2+: 2.0x)"
               >
                 D.O.T
@@ -379,8 +507,8 @@
                 type="button"
                 id="hotBtn"
                 onclick="setDayType(true);"
-                style="padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 800; cursor: pointer; border: 1px solid rgba(67, 139, 196, 0.3); background: rgba(10, 22, 45, 0.6); color: #8CC1E9;"
-                title="H.O.T (Hari Libur: Jam 1-7: 2x, Jam 8: 3x, Jam 9+: 4x)"
+                style="padding: 6px 16px; border-radius: 6px; font-size: 0.88rem; font-weight: 800; letter-spacing: 0.04em; cursor: pointer; border: 1.5px solid rgba(67, 139, 196, 0.35); background: rgba(10, 22, 45, 0.7); color: #8CC1E9; transition: all 0.2s ease;"
+                title="H.O.T (Hari Libur: Maksimal 7 jam kerja, Jam 1-6 Bersih: 2.0x TUL)"
               >
                 H.O.T
               </button>
@@ -405,7 +533,7 @@
               color-scheme: dark;
               box-sizing: border-box;
             "
-            onchange="recalculatePreview();"
+            onchange="onDateChange();"
           />
         </div>
 
@@ -460,9 +588,31 @@
             </span>
           </div>
 
-          <span style="font-size: 0.76rem; color: #8CC1E9; font-weight: 700;">
-            Kalkulasi Otomatis Sesuai Regulasi
-          </span>
+          <button
+            type="button"
+            id="toggleTulTableBtn"
+            onclick="toggleTulTable();"
+            style="
+              background: rgba(14, 165, 233, 0.12);
+              border: 1px solid rgba(56, 189, 248, 0.35);
+              border-radius: 6px;
+              padding: 5px 12px;
+              color: #38bdf8;
+              font-size: 0.78rem;
+              font-weight: 700;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              transition: all 0.2s ease;
+            "
+            onmouseenter="this.style.background='rgba(14, 165, 233, 0.22)'; this.style.borderColor='#38bdf8';"
+            onmouseleave="this.style.background='rgba(14, 165, 233, 0.12)'; this.style.borderColor='rgba(56, 189, 248, 0.35)';"
+            title="Klik untuk membuka / menutup Tabel Perhitungan TUL Lembur"
+          >
+            <span>Tabel Perhitungan TUL Lembur</span>
+            <i data-lucide="chevron-down" id="tulTableChevron" style="width: 14px; height: 14px; color: #38bdf8; transition: transform 0.25s ease;"></i>
+          </button>
         </div>
 
         <!-- Metrics Row -->
@@ -491,6 +641,137 @@
           <i data-lucide="calculator" style="width: 14px; height: 14px; color: #00d2ff;"></i>
           <span>Rincian Formula:</span>
           <strong id="previewFormulaBreakdown" style="color: #FFF8E7;">(1 jam × 1.5) + (1 jam × 2.0) = 3.5 TUL</strong>
+        </div>
+
+        <!-- TABEL PERHITUNGAN TUL LEMBUR (COLLAPSIBLE) -->
+        <div
+          id="tulTableContainer"
+          style="
+            display: none;
+            margin-top: 6px;
+            padding-top: 14px;
+            border-top: 1px dashed rgba(67, 139, 196, 0.35);
+          "
+        >
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i data-lucide="table-2" style="width: 18px; height: 18px; color: #00d2ff;"></i>
+              <span style="font-size: 0.88rem; font-weight: 900; color: #FFF8E7; letter-spacing: 0.04em;">
+                TABEL PERHITUNGAN TUL LEMBUR
+              </span>
+            </div>
+            <span style="font-size: 0.72rem; color: #8CC1E9; font-weight: 600;">
+              Referensi Nilai TUL Lembur Berdasarkan Jam
+            </span>
+          </div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+              gap: 16px;
+            "
+          >
+            <!-- TABEL A: HARI KERJA (SENIN - SABTU) -->
+            <div
+              style="
+                background: rgba(10, 22, 45, 0.85);
+                border: 1px solid rgba(67, 139, 196, 0.35);
+                border-radius: 10px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  background: linear-gradient(135deg, rgba(2, 132, 199, 0.35) 0%, rgba(14, 165, 233, 0.2) 100%);
+                  padding: 8px 12px;
+                  border-bottom: 1.5px solid rgba(56, 189, 248, 0.35);
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                "
+              >
+                <i data-lucide="briefcase" style="width: 14px; height: 14px; color: #38bdf8;"></i>
+                <span style="font-size: 0.82rem; font-weight: 800; color: #ffffff;">
+                  A. Hari Kerja (Senin–Sabtu)
+                </span>
+              </div>
+              <div style="max-height: 280px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.80rem;">
+                  <thead>
+                    <tr style="position: sticky; top: 0; background: #07152d; border-bottom: 1.5px solid rgba(67, 139, 196, 0.4); z-index: 2;">
+                      <th style="padding: 7px 12px; text-align: left; color: #94a3b8; font-weight: 700; width: 50%;">Jam Ke</th>
+                      <th style="padding: 7px 12px; text-align: right; color: #38bdf8; font-weight: 700; width: 50%;">TUL</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @{
+                      int rAIdx = 0;
+                      foreach (var item in TabelTulKerja)
+                      {
+                        rAIdx++;
+                        string bg = (rAIdx % 2 == 1) ? "rgba(9, 26, 56, 0.45)" : "rgba(13, 38, 84, 0.25)";
+                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); background-color: @bg;">
+                          <td style="padding: 6px 12px; text-align: left; color: #f1f5f9; font-weight: 600; font-family: 'JetBrains Mono', monospace;">@item.Jam</td>
+                          <td style="padding: 6px 12px; text-align: right; color: #38bdf8; font-weight: 800; font-family: 'JetBrains Mono', monospace;">@item.Tul</td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- TABEL B: HARI MINGGU & LIBUR -->
+            <div
+              style="
+                background: rgba(10, 22, 45, 0.85);
+                border: 1px solid rgba(251, 191, 36, 0.35);
+                border-radius: 10px;
+                overflow: hidden;
+              "
+            >
+              <div
+                style="
+                  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(217, 119, 6, 0.15) 100%);
+                  padding: 8px 12px;
+                  border-bottom: 1.5px solid rgba(251, 191, 36, 0.35);
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                "
+              >
+                <i data-lucide="calendar" style="width: 14px; height: 14px; color: #fbbf24;"></i>
+                <span style="font-size: 0.82rem; font-weight: 800; color: #fbbf24;">
+                  B. Hari Minggu &amp; Libur (Maks. 7 Jam Kerja)
+                </span>
+              </div>
+              <div style="max-height: 280px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.80rem;">
+                  <thead>
+                    <tr style="position: sticky; top: 0; background: #07152d; border-bottom: 1.5px solid rgba(251, 191, 36, 0.4); z-index: 2;">
+                      <th style="padding: 7px 12px; text-align: left; color: #94a3b8; font-weight: 700; width: 50%;">Jam Ke</th>
+                      <th style="padding: 7px 12px; text-align: right; color: #fbbf24; font-weight: 700; width: 50%;">TUL</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @{
+                      int rBIdx = 0;
+                      foreach (var item in TabelTulLibur)
+                      {
+                        rBIdx++;
+                        string bg = (rBIdx % 2 == 1) ? "rgba(9, 26, 56, 0.45)" : "rgba(13, 38, 84, 0.25)";
+                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); background-color: @bg;">
+                          <td style="padding: 6px 12px; text-align: left; color: #f1f5f9; font-weight: 600; font-family: 'JetBrains Mono', monospace;">@item.Jam</td>
+                          <td style="padding: 6px 12px; text-align: right; color: #fbbf24; font-weight: 800; font-family: 'JetBrains Mono', monospace;">@item.Tul</td>
+                        </tr>
+                      }
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -572,13 +853,15 @@
     var chev = document.getElementById('empDropdownChevron');
     if (popup) popup.style.display = isDropdownOpen ? 'block' : 'none';
     if (chev) chev.style.transform = isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)';
-    if (isDropdownOpen) {
+    if (isDropdownOpen && document.getElementById('empSearchInput')) {
       document.getElementById('empSearchInput').focus();
     }
   }
 
   function filterEmpList() {
-    var q = document.getElementById('empSearchInput').value.toLowerCase();
+    var searchInput = document.getElementById('empSearchInput');
+    if (!searchInput) return;
+    var q = searchInput.value.toLowerCase();
     var items = document.querySelectorAll('.emp-option-item');
     items.forEach(function(item) {
       var name = item.getAttribute('data-name').toLowerCase();
@@ -588,18 +871,23 @@
   }
 
   function selectEmployee(name, npk, plant, shift) {
-    document.getElementById('selectedNpkHidden').value = npk;
-    document.getElementById('selectedNameHidden').value = name;
-    document.getElementById('npkDisplayInput').value = npk;
-    document.getElementById('selectedEmpDisplay').innerText = name + ' (' + npk + ')';
-    document.getElementById('selectedEmpDisplay').style.color = '#FFF8E7';
+    if (document.getElementById('selectedNpkHidden')) document.getElementById('selectedNpkHidden').value = npk;
+    if (document.getElementById('selectedNameHidden')) document.getElementById('selectedNameHidden').value = name;
+    if (document.getElementById('npkDisplayInput')) document.getElementById('npkDisplayInput').value = npk;
+    var display = document.getElementById('selectedEmpDisplay');
+    if (display) {
+      display.innerText = name + ' (' + npk + ')';
+      display.style.color = '#FFF8E7';
+    }
 
     if (plant) {
       var pSelect = document.getElementById('plantSelect');
-      for (var i = 0; i < pSelect.options.length; i++) {
-        if (pSelect.options[i].value === plant) {
-          pSelect.selectedIndex = i;
-          break;
+      if (pSelect && pSelect.tagName === 'SELECT') {
+        for (var i = 0; i < pSelect.options.length; i++) {
+          if (pSelect.options[i].value === plant) {
+            pSelect.selectedIndex = i;
+            break;
+          }
         }
       }
     }
@@ -612,7 +900,9 @@
   }
 
   function onPlantChange() {
-    var plant = document.getElementById('plantSelect').value;
+    var pSelect = document.getElementById('plantSelect');
+    if (!pSelect) return;
+    var plant = pSelect.value;
     var items = document.querySelectorAll('.emp-option-item');
     var count = 0;
     items.forEach(function(item) {
@@ -624,7 +914,10 @@
         item.style.display = 'none';
       }
     });
-    document.getElementById('employeeCountBadge').innerText = count + ' Karyawan (' + (plant || 'Semua') + ')';
+    var badge = document.getElementById('employeeCountBadge');
+    if (badge) {
+      badge.innerText = count + ' Karyawan (' + (plant || 'Semua') + ')';
+    }
   }
 
   // Shift selection
@@ -673,6 +966,105 @@
     recalculatePreview();
   }
 
+  // National Holidays Dictionary (synchronized with OvertimeCalculatorService)
+  var fixedHolidays = {
+    '01-01': 'Tahun Baru Masehi',
+    '05-01': 'Hari Buruh Internasional',
+    '06-01': 'Hari Lahir Pancasila',
+    '08-17': 'Hari Proklamasi Kemerdekaan RI',
+    '12-25': 'Hari Raya Natal'
+  };
+
+  var dynamicHolidays = {
+    // 2026
+    '2026-01-01': 'Tahun Baru 2026 Masehi',
+    '2026-01-16': "Isra Mi'raj Nabi Muhammad SAW",
+    '2026-02-17': 'Tahun Baru Imlek 2577 Kongzili',
+    '2026-03-20': 'Hari Suci Nyepi (Tahun Baru Saka 1948)',
+    '2026-03-21': 'Hari Raya Idul Fitri 1447 H (Hari Ke-1)',
+    '2026-03-22': 'Hari Raya Idul Fitri 1447 H (Hari Ke-2)',
+    '2026-04-03': 'Wafat Yesus Kristus (Jumat Agung)',
+    '2026-04-05': 'Hari Paskah',
+    '2026-05-01': 'Hari Buruh Internasional',
+    '2026-05-14': 'Kenaikan Yesus Kristus',
+    '2026-05-31': 'Hari Raya Waisak 2570 BE',
+    '2026-06-01': 'Hari Lahir Pancasila',
+    '2026-06-27': 'Hari Raya Idul Adha 1447 H',
+    '2026-07-16': 'Tahun Baru Islam 1448 H',
+    '2026-08-17': 'Hari Kemerdekaan RI Ke-81',
+    '2026-08-25': 'Maulid Nabi Muhammad SAW',
+    '2026-12-25': 'Hari Raya Natal',
+    // 2025
+    '2025-01-01': 'Tahun Baru 2025 Masehi',
+    '2025-01-27': "Isra Mi'raj Nabi Muhammad SAW",
+    '2025-01-29': 'Tahun Baru Imlek 2576 Kongzili',
+    '2025-03-29': 'Hari Suci Nyepi (Tahun Baru Saka 1947)',
+    '2025-03-31': 'Hari Raya Idul Fitri 1446 H (Hari Ke-1)',
+    '2025-04-01': 'Hari Raya Idul Fitri 1446 H (Hari Ke-2)',
+    '2025-04-18': 'Wafat Yesus Kristus (Jumat Agung)',
+    '2025-04-20': 'Hari Paskah',
+    '2025-05-01': 'Hari Buruh Internasional',
+    '2025-05-12': 'Hari Raya Waisak 2569 BE',
+    '2025-05-29': 'Kenaikan Yesus Kristus',
+    '2025-06-01': 'Hari Lahir Pancasila',
+    '2025-06-07': 'Hari Raya Idul Adha 1446 H',
+    '2025-06-27': 'Tahun Baru Islam 1447 H',
+    '2025-08-17': 'Hari Kemerdekaan RI Ke-80',
+    '2025-09-05': 'Maulid Nabi Muhammad SAW',
+    '2025-12-25': 'Hari Raya Natal',
+    // 2024
+    '2024-01-01': 'Tahun Baru 2024 Masehi',
+    '2024-02-08': "Isra Mi'raj Nabi Muhammad SAW",
+    '2024-02-10': 'Tahun Baru Imlek 2575 Kongzili',
+    '2024-03-11': 'Hari Suci Nyepi (Tahun Baru Saka 1946)',
+    '2024-03-29': 'Wafat Yesus Kristus',
+    '2024-04-10': 'Hari Raya Idul Fitri 1445 H (Hari Ke-1)',
+    '2024-04-11': 'Hari Raya Idul Fitri 1445 H (Hari Ke-2)',
+    '2024-05-01': 'Hari Buruh Internasional',
+    '2024-05-09': 'Kenaikan Yesus Kristus',
+    '2024-05-23': 'Hari Raya Waisak 2568 BE',
+    '2024-06-01': 'Hari Lahir Pancasila',
+    '2024-06-17': 'Hari Raya Idul Adha 1445 H',
+    '2024-07-07': 'Tahun Baru Islam 1446 H',
+    '2024-08-17': 'Hari Kemerdekaan RI Ke-79',
+    '2024-09-16': 'Maulid Nabi Muhammad SAW',
+    '2024-12-25': 'Hari Raya Natal'
+  };
+
+  function checkHoliday(dateStr) {
+    if (!dateStr) return { isHoliday: false, desc: 'Hari Kerja Biasa' };
+    var parts = dateStr.split('-');
+    if (parts.length !== 3) return { isHoliday: false, desc: 'Hari Kerja Biasa' };
+    var y = parseInt(parts[0]);
+    var m = parseInt(parts[1]) - 1;
+    var d = parseInt(parts[2]);
+    var dt = new Date(y, m, d);
+
+    // Hari Minggu
+    if (dt.getDay() === 0) {
+      return { isHoliday: true, desc: 'Hari Minggu' };
+    }
+
+    // Hari Libur Nasional Dinamis
+    if (dynamicHolidays[dateStr]) {
+      return { isHoliday: true, desc: dynamicHolidays[dateStr] };
+    }
+
+    // Hari Libur Nasional Tahunan Tetap
+    var mmdd = String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    if (fixedHolidays[mmdd]) {
+      return { isHoliday: true, desc: fixedHolidays[mmdd] };
+    }
+
+    return { isHoliday: false, desc: 'Hari Kerja Biasa' };
+  }
+
+  function onDateChange() {
+    var dateVal = document.getElementById('workDateInput').value;
+    var hol = checkHoliday(dateVal);
+    setDayType(hol.isHoliday);
+  }
+
   // Day type: DOT vs HOT
   function setDayType(isHoliday) {
     document.getElementById('isHolidayHidden').value = isHoliday ? 'true' : 'false';
@@ -680,21 +1072,25 @@
     var hot = document.getElementById('hotBtn');
 
     if (isHoliday) {
-      hot.style.border = '1px solid #fbbf24';
-      hot.style.background = 'rgba(245, 158, 11, 0.35)';
+      hot.style.border = '1.5px solid #fbbf24';
+      hot.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.45) 0%, rgba(217, 119, 6, 0.3) 100%)';
       hot.style.color = '#fbbf24';
+      hot.style.boxShadow = '0 0 10px rgba(245, 158, 11, 0.35)';
 
-      dot.style.border = '1px solid rgba(67, 139, 196, 0.3)';
-      dot.style.background = 'rgba(10, 22, 45, 0.6)';
+      dot.style.border = '1.5px solid rgba(67, 139, 196, 0.35)';
+      dot.style.background = 'rgba(10, 22, 45, 0.7)';
       dot.style.color = '#8CC1E9';
+      dot.style.boxShadow = 'none';
     } else {
-      dot.style.border = '1px solid #00d2ff';
-      dot.style.background = 'rgba(0, 136, 255, 0.4)';
-      dot.style.color = '#FFF8E7';
+      dot.style.border = '1.5px solid #00d2ff';
+      dot.style.background = 'linear-gradient(135deg, rgba(0, 136, 255, 0.45) 0%, rgba(2, 132, 199, 0.3) 100%)';
+      dot.style.color = '#ffffff';
+      dot.style.boxShadow = '0 0 10px rgba(0, 210, 255, 0.35)';
 
-      hot.style.border = '1px solid rgba(67, 139, 196, 0.3)';
-      hot.style.background = 'rgba(10, 22, 45, 0.6)';
+      hot.style.border = '1.5px solid rgba(67, 139, 196, 0.35)';
+      hot.style.background = 'rgba(10, 22, 45, 0.7)';
       hot.style.color = '#8CC1E9';
+      hot.style.boxShadow = 'none';
     }
     recalculatePreview();
   }
@@ -704,6 +1100,9 @@
     var inVal = document.getElementById('jamMasukInput').value;
     var outVal = document.getElementById('jamPulangInput').value;
     var isHoliday = document.getElementById('isHolidayHidden').value === 'true';
+    var dateVal = document.getElementById('workDateInput').value;
+    var holInfo = checkHoliday(dateVal);
+    var effectiveHoliday = isHoliday || holInfo.isHoliday;
 
     if (!inVal || !outVal) return;
 
@@ -716,47 +1115,209 @@
       outMin += 24 * 60; // Next day wrap
     }
 
-    var totalMin = outMin - inMin;
-    var rawHours = Math.round((totalMin / 60) * 10) / 10;
+    var rawMinutes = outMin - inMin;
+    var rawHours = Math.round((rawMinutes / 60.0) * 100) / 100;
 
-    document.getElementById('durationStatusBadge').innerText = totalMin + ' Menit Total';
+    var submitBtn = document.getElementById('submitOvertimeBtn');
+    var statusText = document.getElementById('calcStatusText');
+    var statusIcon = document.getElementById('calcStatusIcon');
+    var durationBadge = document.getElementById('durationStatusBadge');
 
-    // Calculate TUL
+    // ATURAN 3: Validasi input <= 1 jam (60 menit)
+    if (rawMinutes <= 60) {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        submitBtn.style.cursor = 'not-allowed';
+      }
+      if (statusText) {
+        statusText.innerText = 'STATUS: DURASI TIDAK VALID (<= 1 JAM)';
+        statusText.style.color = '#f43f5e';
+      }
+      if (statusIcon) {
+        statusIcon.setAttribute('data-lucide', 'alert-circle');
+        statusIcon.style.color = '#f43f5e';
+      }
+      if (durationBadge) {
+        durationBadge.innerText = rawMinutes + ' Menit (Input <= 1 Jam Tidak Valid)';
+        durationBadge.style.color = '#fb7185';
+        durationBadge.style.background = 'rgba(244, 63, 94, 0.15)';
+        durationBadge.style.borderColor = 'rgba(244, 63, 94, 0.35)';
+      }
+      document.getElementById('previewJamVal').innerText = '0.0';
+      document.getElementById('previewTulVal').innerText = '0.0';
+      document.getElementById('previewFormulaBreakdown').innerText = 'Input ' + rawHours.toFixed(1) + ' jam tidak valid. Wajib > 1 jam karena terdapat pengurangan tetap 1 jam istirahat.';
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    // ATURAN 2: Validasi Hari Libur (Maksimal 7 jam total input: 6 jam kerja + 1 jam istirahat)
+    if (effectiveHoliday && rawMinutes > 7 * 60) {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        submitBtn.style.cursor = 'not-allowed';
+      }
+      if (statusText) {
+        statusText.innerText = 'STATUS: DITOLAK (HARI LIBUR MAKSIMAL 7 JAM: 6 JAM KERJA + 1 JAM ISTIRAHAT)';
+        statusText.style.color = '#f43f5e';
+      }
+      if (statusIcon) {
+        statusIcon.setAttribute('data-lucide', 'alert-circle');
+        statusIcon.style.color = '#f43f5e';
+      }
+      if (durationBadge) {
+        durationBadge.innerText = rawMinutes + ' Menit (' + rawHours.toFixed(1) + ' Jam - Melebihi Batas Maksimal 7 Jam Termasuk Istirahat)';
+        durationBadge.style.color = '#fb7185';
+        durationBadge.style.background = 'rgba(244, 63, 94, 0.15)';
+        durationBadge.style.borderColor = 'rgba(244, 63, 94, 0.35)';
+      }
+      document.getElementById('previewJamVal').innerText = '0.0';
+      document.getElementById('previewTulVal').innerText = '0.0';
+      document.getElementById('previewFormulaBreakdown').innerText = 'Untuk hari libur (' + holInfo.desc + '), batas maksimal adalah 7 jam (sudah termasuk 1 jam istirahat, sehingga jam kerja cuma 6 jam).';
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    // Input Valid (> 60 menit dan <= 7 jam di hari libur)
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+    }
+
+    var countedMinutes = 0;
+    var jamOvertime = 0;
     var tul = 0;
     var breakdown = '';
-    if (!isHoliday) {
-      // D.O.T
-      if (rawHours <= 1) {
-        tul = rawHours * 1.5;
-        breakdown = rawHours + ' jam × 1.5 = ' + tul.toFixed(1) + ' TUL';
-      } else {
-        tul = 1.5 + (rawHours - 1) * 2.0;
-        breakdown = '(1 jam × 1.5) + (' + (rawHours - 1).toFixed(1) + ' jam × 2.0) = ' + tul.toFixed(1) + ' TUL';
+
+    if (effectiveHoliday) {
+      // ATURAN 2: Hari Libur (Minggu / Libur Nasional)
+      // Pengurangan tetap 1 jam untuk istirahat (maksimal 7 jam input -> kerja efektif cuma 6 jam).
+      // Rumus: durasi kerja bersih = durasi input - 1 jam istirahat
+      countedMinutes = rawMinutes - 60; // kurangi 1 jam istirahat
+      jamOvertime = Math.round((countedMinutes / 60.0) * 100) / 100;
+
+      // Hitung TUL Libur (Jam 1-6: x2.0)
+      tul = jamOvertime * 2.0;
+      breakdown = jamOvertime.toFixed(1) + ' jam kerja × 2.0 = ' + tul.toFixed(1) + ' TUL (Total ' + rawHours.toFixed(1) + ' jam - 1 jam istirahat = ' + jamOvertime.toFixed(1) + ' jam kerja)';
+      tul = Math.round(tul * 100) / 100;
+
+      if (durationBadge) {
+        durationBadge.innerText = countedMinutes + ' Menit Bersih (' + jamOvertime.toFixed(1) + ' Jam Kerja Efektif + 1 Jam Istirahat)';
+      }
+
+      if (statusText) {
+        statusText.innerText = 'STATUS: SAH (HARI LIBUR - ' + holInfo.desc.toUpperCase() + ')';
+        statusText.style.color = '#fbbf24';
+      }
+      if (statusIcon) {
+        statusIcon.setAttribute('data-lucide', 'calendar');
+        statusIcon.style.color = '#fbbf24';
       }
     } else {
-      // H.O.T
-      if (rawHours <= 7) {
-        tul = rawHours * 2.0;
-        breakdown = rawHours + ' jam × 2.0 = ' + tul.toFixed(1) + ' TUL';
-      } else if (rawHours <= 8) {
-        tul = 14 + (rawHours - 7) * 3.0;
-        breakdown = '(7 jam × 2.0) + (' + (rawHours - 7).toFixed(1) + ' jam × 3.0) = ' + tul.toFixed(1) + ' TUL';
+      // ATURAN 1: Hari Kerja Biasa
+      // Tidak ada batas maksimal durasi lembur.
+      // Pengurangan tetap 1 jam untuk istirahat.
+      // Rumus: durasi lembur bersih = durasi input - 1 jam.
+      countedMinutes = rawMinutes - 60;
+      jamOvertime = Math.round((countedMinutes / 60.0) * 100) / 100;
+
+      // Hitung TUL Kerja (Jam 1: x1.5, Jam 2+: x2.0)
+      if (jamOvertime <= 1) {
+        tul = jamOvertime * 1.5;
+        breakdown = jamOvertime.toFixed(1) + ' jam × 1.5 = ' + tul.toFixed(1) + ' TUL';
       } else {
-        tul = 17 + (rawHours - 8) * 4.0;
-        breakdown = '(7 jam × 2.0) + (1 jam × 3.0) + (' + (rawHours - 8).toFixed(1) + ' jam × 4.0) = ' + tul.toFixed(1) + ' TUL';
+        tul = 1.5 + (jamOvertime - 1.0) * 2.0;
+        breakdown = '(1 jam × 1.5) + (' + (jamOvertime - 1.0).toFixed(1) + ' jam × 2.0) = ' + tul.toFixed(1) + ' TUL';
+      }
+
+      tul = Math.round(tul * 100) / 100;
+
+      if (durationBadge) {
+        durationBadge.innerText = countedMinutes + ' Menit Bersih (Input: ' + rawHours.toFixed(1) + ' Jam - 1 Jam Istirahat)';
+      }
+
+      if (statusText) {
+        statusText.innerText = 'STATUS: SAH (HARI KERJA BIASA)';
+        statusText.style.color = '#10b981';
+      }
+      if (statusIcon) {
+        statusIcon.setAttribute('data-lucide', 'check-circle-2');
+        statusIcon.style.color = '#10b981';
       }
     }
 
-    document.getElementById('previewJamVal').innerText = rawHours.toFixed(1);
+    if (durationBadge) {
+      durationBadge.style.color = '#34d399';
+      durationBadge.style.background = 'rgba(52, 211, 153, 0.12)';
+      durationBadge.style.borderColor = 'rgba(52, 211, 153, 0.3)';
+    }
+
+    document.getElementById('previewJamVal').innerText = jamOvertime.toFixed(1);
     document.getElementById('previewTulVal').innerText = tul.toFixed(1);
     document.getElementById('previewFormulaBreakdown').innerText = breakdown;
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // Form submission interceptor to strictly enforce validation rules
+  var otForm = document.getElementById('overtimeForm');
+  if (otForm) {
+    otForm.addEventListener('submit', function(e) {
+      var npk = document.getElementById('selectedNpkHidden').value;
+      if (!npk) {
+        e.preventDefault();
+        alert('Silakan pilih nama karyawan terlebih dahulu.');
+        return false;
+      }
+
+      var inVal = document.getElementById('jamMasukInput').value;
+      var outVal = document.getElementById('jamPulangInput').value;
+      var isHoliday = document.getElementById('isHolidayHidden').value === 'true';
+      var dateVal = document.getElementById('workDateInput').value;
+      var holInfo = checkHoliday(dateVal);
+      var effectiveHoliday = isHoliday || holInfo.isHoliday;
+
+      if (!inVal || !outVal) {
+        e.preventDefault();
+        alert('Jam mulai dan jam selesai lembur wajib diisi.');
+        return false;
+      }
+
+      var inParts = inVal.split(':');
+      var outParts = outVal.split(':');
+      var inMin = parseInt(inParts[0]) * 60 + parseInt(inParts[1]);
+      var outMin = parseInt(outParts[0]) * 60 + parseInt(outParts[1]);
+      if (outMin < inMin) outMin += 24 * 60;
+      var rawMinutes = outMin - inMin;
+
+      if (rawMinutes <= 60) {
+        e.preventDefault();
+        alert('Durasi input harus lebih dari 1 jam (60 menit) karena terdapat pengurangan tetap 1 jam istirahat.');
+        return false;
+      }
+
+      if (effectiveHoliday && rawMinutes > 7 * 60) {
+        e.preventDefault();
+        alert('Untuk hari libur (' + holInfo.desc + '), batas maksimal input adalah 7 jam (sudah termasuk 1 jam istirahat, sehingga jam kerja cuma 6 jam).');
+        return false;
+      }
+    });
   }
 
   function resetInputForm() {
     document.getElementById('overtimeForm').reset();
+    @if (isKaryawan)
+    {
+      <text>
+      if (document.getElementById('selectedNpkHidden')) document.getElementById('selectedNpkHidden').value = '@currentUser?.Npk';
+      if (document.getElementById('selectedNameHidden')) document.getElementById('selectedNameHidden').value = '@currentUser?.Name';
+      if (document.getElementById('npkDisplayInput')) document.getElementById('npkDisplayInput').value = '@currentUser?.Npk';
+      </text>
+    }
     setShift('Shift 1');
-    setDayType(false);
-    recalculatePreview();
+    onDateChange();
   }
 
   // Close dropdown on clicking outside
@@ -768,7 +1329,22 @@
     }
   });
 
-  // Initial calculation
-  recalculatePreview();
+  // Toggle Tabel Perhitungan TUL Lembur
+  var isTulTableOpen = false;
+  function toggleTulTable() {
+    isTulTableOpen = !isTulTableOpen;
+    var container = document.getElementById('tulTableContainer');
+    var chevron = document.getElementById('tulTableChevron');
+    if (container) {
+      container.style.display = isTulTableOpen ? 'block' : 'none';
+    }
+    if (chevron) {
+      chevron.style.transform = isTulTableOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // Initial calculation and holiday detection
+  onDateChange();
 </script>
 }

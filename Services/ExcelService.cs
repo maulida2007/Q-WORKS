@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using ClosedXML.Excel;
 using QWorks.Models;
+using QWorks.Models.ViewModels;
 
 namespace QWorks.Services
 {
@@ -13,6 +14,7 @@ namespace QWorks.Services
         byte[] ExportRiwayatPenginput(List<OvertimeRequest> records);
         byte[] GetMasterPekerjaTemplate();
         List<User> ParseMasterPekerjaExcel(Stream stream);
+        MasterPekerjaImportResult ParseMasterPekerjaExcelWithReport(Stream stream);
     }
 
     public class ExcelService : IExcelService
@@ -89,9 +91,8 @@ namespace QWorks.Services
             var ws = workbook.Worksheets.Add("Rekap Overtime");
 
             string[] headers = {
-                "No", "No. Pengajuan", "Tanggal", "Nama Karyawan", "NPK", "Plant",
-                "Shift", "Jam Waktu", "Jam Overtime", "Tipe Hari", "Total TUL",
-                "Tipe Lembur", "Status", "Alasan / Kegiatan", "Diajukan Oleh", "Waktu Input"
+                "No", "Nama Karyawan", "NPK", "Plant",
+                "Shift", "Jam Overtime", "Tipe Hari", "Total TUL", "Waktu Input"
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -107,30 +108,29 @@ namespace QWorks.Services
                 ws.Cell(row, 1).Value = no++;
                 ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                ws.Cell(row, 2).Value = r.RequestNumber;
-                ws.Cell(row, 3).Value = r.WorkDate.ToString("dd/MM/yyyy");
+                ws.Cell(row, 2).Value = r.UserName;
+                ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                ws.Cell(row, 3).SetValue(r.UserNpk);
                 ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                ws.Cell(row, 4).Value = r.UserName;
-                ws.Cell(row, 5).SetValue(r.UserNpk);
+                ws.Cell(row, 4).Value = r.Plant;
+                ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                ws.Cell(row, 5).Value = r.ShiftName;
                 ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                ws.Cell(row, 6).Value = r.Plant;
-                ws.Cell(row, 7).Value = r.ShiftName;
-                ws.Cell(row, 8).Value = r.JamWaktu;
+                ws.Cell(row, 6).Value = r.JamOvertime;
+                ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
-                ws.Cell(row, 9).Value = r.JamOvertime;
-                ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                ws.Cell(row, 7).Value = r.IsHoliday ? "Hari Libur" : "Hari Kerja";
+                ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                ws.Cell(row, 10).Value = r.IsHoliday ? "Hari Libur" : "Hari Kerja";
-                ws.Cell(row, 11).Value = r.TotalTul;
-                ws.Cell(row, 11).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                ws.Cell(row, 8).Value = r.TotalTul;
+                ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
-                ws.Cell(row, 12).Value = r.OvertimeTypeLabel;
-                ws.Cell(row, 13).Value = r.Status;
-                ws.Cell(row, 14).Value = r.Reason;
-                ws.Cell(row, 15).Value = r.CreatedByName ?? r.UserName;
-                ws.Cell(row, 16).Value = r.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss");
+                ws.Cell(row, 9).Value = r.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss");
+                ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                 row++;
             }
@@ -151,10 +151,28 @@ namespace QWorks.Services
             using var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Riwayat Penginput");
 
+            // 10 Kolom Spesifikasi Resmi Sistem Q-WORKS:
+            // 1. Waktu Input
+            // 2. Role Penginput
+            // 3. Plant (Penginput)
+            // 4. Nama Karyawan
+            // 5. NPK
+            // 6. Plant Karyawan
+            // 7. Shift
+            // 8. Tanggal Lembur
+            // 9. Jam Lembur
+            // 10. Total TUL
             string[] headers = {
-                "No", "Waktu Penginputan", "Nama Penginput", "NPK Penginput", "Role Penginput", "Plant Penginput",
-                "Nama Karyawan Lembur", "NPK Karyawan", "Plant Lembur", "Shift", "Tanggal Lembur",
-                "Jam Lembur", "Total TUL", "Status Lembur"
+                "Waktu Input",
+                "Role Penginput",
+                "Plant",
+                "Nama Karyawan",
+                "NPK",
+                "Plant Karyawan",
+                "Shift",
+                "Tanggal Lembur",
+                "Jam Lembur",
+                "Total TUL"
             };
 
             for (int i = 0; i < headers.Length; i++)
@@ -164,31 +182,47 @@ namespace QWorks.Services
             ApplyHeaderStyle(ws.Range(1, 1, 1, headers.Length));
 
             int row = 2;
-            int no = 1;
             foreach (var r in records)
             {
-                ws.Cell(row, 1).Value = no++;
+                // 1. Waktu Input
+                ws.Cell(row, 1).Value = r.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss");
                 ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                ws.Cell(row, 2).Value = r.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss");
-                ws.Cell(row, 3).Value = r.CreatedByName ?? r.UserName;
-                ws.Cell(row, 4).SetValue(r.CreatedByNpk ?? r.UserNpk);
-                ws.Cell(row, 5).Value = r.CreatedByRole ?? "karyawan";
-                ws.Cell(row, 6).Value = r.CreatedByPlant ?? r.Plant;
+                // 2. Role Penginput
+                ws.Cell(row, 2).Value = r.CreatedByRole ?? "karyawan";
+                ws.Cell(row, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                ws.Cell(row, 7).Value = r.UserName;
-                ws.Cell(row, 8).SetValue(r.UserNpk);
-                ws.Cell(row, 9).Value = r.Plant;
-                ws.Cell(row, 10).Value = r.ShiftName;
-                ws.Cell(row, 11).Value = r.WorkDate.ToString("yyyy-MM-dd");
+                // 3. Plant (Plant Penginput)
+                ws.Cell(row, 3).Value = r.CreatedByPlant ?? r.Plant;
+                ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                ws.Cell(row, 12).Value = r.JamOvertime;
-                ws.Cell(row, 12).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                // 4. Nama Karyawan
+                ws.Cell(row, 4).Value = r.UserName;
+                ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
 
-                ws.Cell(row, 13).Value = r.TotalTul;
-                ws.Cell(row, 13).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+                // 5. NPK
+                ws.Cell(row, 5).SetValue(r.UserNpk);
+                ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                ws.Cell(row, 14).Value = r.Status;
+                // 6. Plant Karyawan
+                ws.Cell(row, 6).Value = r.Plant;
+                ws.Cell(row, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                // 7. Shift
+                ws.Cell(row, 7).Value = r.ShiftName;
+                ws.Cell(row, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                // 8. Tanggal Lembur
+                ws.Cell(row, 8).Value = r.WorkDate.ToString("yyyy-MM-dd");
+                ws.Cell(row, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                // 9. Jam Lembur
+                ws.Cell(row, 9).Value = r.JamOvertime;
+                ws.Cell(row, 9).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                // 10. Total TUL
+                ws.Cell(row, 10).Value = r.TotalTul;
+                ws.Cell(row, 10).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
 
                 row++;
             }
@@ -242,36 +276,115 @@ namespace QWorks.Services
 
         public List<User> ParseMasterPekerjaExcel(Stream stream)
         {
-            var result = new List<User>();
-            using var workbook = new XLWorkbook(stream);
-            var ws = workbook.Worksheet(1);
+            var report = ParseMasterPekerjaExcelWithReport(stream);
+            return report.ValidEmployees;
+        }
 
-            int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
-            if (lastRow < 2) return result;
+        public MasterPekerjaImportResult ParseMasterPekerjaExcelWithReport(Stream stream)
+        {
+            var result = new MasterPekerjaImportResult();
+            var seenNpks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            XLWorkbook workbook;
+            try
+            {
+                workbook = new XLWorkbook(stream);
+            }
+            catch (Exception ex)
+            {
+                result.ErrorDetails.Add($"Gagal membuka file Excel: Pastikan file berekstensi .xlsx yang valid. ({ex.Message})");
+                return result;
+            }
+
+            using (workbook)
+            {
+                var ws = workbook.Worksheet(1);
+                if (ws == null)
+                {
+                    result.ErrorDetails.Add("Worksheet Excel tidak ditemukan.");
+                    return result;
+                }
+
+                int lastRow = ws.LastRowUsed()?.RowNumber() ?? 0;
+                if (lastRow < 2)
+                {
+                    result.ErrorDetails.Add("File Excel kosong atau tidak memiliki baris data karyawan.");
+                    return result;
+                }
 
             // Find column indices
-            int npkCol = 1;
-            int nameCol = 2;
-            int plantCol = 3;
+            int npkCol = 0;
+            int nameCol = 0;
+            int plantCol = 0;
 
-            for (int c = 1; c <= 10; c++)
+            for (int c = 1; c <= 15; c++)
             {
                 string header = ws.Cell(1, c).GetString().Trim().ToUpperInvariant();
-                if (header.Contains("NPK") || header.Contains("NIK")) npkCol = c;
-                else if (header.Contains("NAMA") || header.Contains("NAME")) nameCol = c;
-                else if (header.Contains("PLANT") || header.Contains("DEPT")) plantCol = c;
+                if (string.IsNullOrEmpty(header)) continue;
+
+                if (npkCol == 0 && (header.Contains("NPK") || header.Contains("NIK"))) npkCol = c;
+                else if (nameCol == 0 && (header.Contains("NAMA") || header.Contains("NAME"))) nameCol = c;
+                else if (plantCol == 0 && (header.Contains("PLANT") || header.Contains("DEPT"))) plantCol = c;
             }
+
+            if (npkCol == 0)
+            {
+                result.ErrorDetails.Add("Header kolom NPK/NIK tidak ditemukan pada baris pertama Excel.");
+            }
+            if (nameCol == 0)
+            {
+                result.ErrorDetails.Add("Header kolom Nama Karyawan tidak ditemukan pada baris pertama Excel.");
+            }
+            if (result.ErrorDetails.Count > 0)
+            {
+                return result;
+            }
+
+            if (plantCol == 0) plantCol = 3;
 
             for (int r = 2; r <= lastRow; r++)
             {
                 string npk = ws.Cell(r, npkCol).GetString().Trim().ToUpperInvariant();
                 string name = ws.Cell(r, nameCol).GetString().Trim();
-                string plant = ws.Cell(r, plantCol).GetString().Trim();
+                string plant = plantCol > 0 ? ws.Cell(r, plantCol).GetString().Trim() : "Plant Hose";
 
-                if (string.IsNullOrWhiteSpace(npk) || string.IsNullOrWhiteSpace(name))
+                // Check empty row
+                if (string.IsNullOrWhiteSpace(npk) && string.IsNullOrWhiteSpace(name))
+                {
+                    continue; // Skip pure empty rows
+                }
+
+                result.TotalRows++;
+
+                // Validation checks
+                if (string.IsNullOrWhiteSpace(npk))
+                {
+                    result.FailedCount++;
+                    result.ErrorDetails.Add($"Baris {r}: Kolom NPK kosong (wajib diisi).");
                     continue;
+                }
 
-                if (!plant.StartsWith("Plant ", StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    result.FailedCount++;
+                    result.ErrorDetails.Add($"Baris {r} (NPK {npk}): Nama Karyawan kosong (wajib diisi).");
+                    continue;
+                }
+
+                if (seenNpks.Contains(npk))
+                {
+                    result.FailedCount++;
+                    result.ErrorDetails.Add($"Baris {r}: NPK '{npk}' terduplikasi dalam file Excel yang sama.");
+                    continue;
+                }
+
+                seenNpks.Add(npk);
+
+                if (string.IsNullOrWhiteSpace(plant))
+                {
+                    plant = "Plant Hose";
+                }
+                else if (!plant.StartsWith("Plant ", StringComparison.OrdinalIgnoreCase))
                 {
                     plant = "Plant " + plant;
                 }
@@ -279,7 +392,7 @@ namespace QWorks.Services
                 string dept = plant.ToLowerInvariant().Replace("plant ", "").Trim();
                 if (dept.Contains("lab")) dept = "lab-mixing";
 
-                result.Add(new User
+                result.ValidEmployees.Add(new User
                 {
                     Nik = npk,
                     Name = name,
@@ -288,8 +401,13 @@ namespace QWorks.Services
                     Role = "karyawan",
                     RoleLabel = "Karyawan Quality",
                     IsActive = true,
-                    IsUserAdded = true
+                    IsUserAdded = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
                 });
+
+                result.SuccessCount++;
+            }
             }
 
             return result;

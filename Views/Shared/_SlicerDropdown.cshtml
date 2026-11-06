@@ -1,0 +1,70 @@
+@model QWorks.Models.ViewModels.SlicerViewModel
+@{
+    int checkedCount = Model.Items.Count(i => i.IsChecked);
+    bool isAllChecked = Model.Items.Count > 0 && checkedCount == Model.Items.Count;
+}
+
+<div class="slicer-select-wrapper @(Model.AlignRight ? "align-right" : "")" id="@Model.Id">
+  <!-- Trigger Button -->
+  <div class="slicer-trigger" onclick="toggleSlicerDropdown('@Model.Id')" title="Klik untuk membuka pilihan @Model.HeaderTitle">
+    <div class="slicer-trigger-left">
+      <span class="slicer-trigger-title">@Model.Title</span>
+      @if (checkedCount > 0 && !isAllChecked)
+      {
+        <span class="slicer-trigger-badge">@checkedCount</span>
+      }
+      else if (isAllChecked && Model.Items.Count > 0)
+      {
+        <span class="slicer-trigger-badge" style="background: rgba(56, 189, 248, 0.25); color: #38bdf8;">Semua</span>
+      }
+    </div>
+    <span class="slicer-trigger-arrow">▼</span>
+  </div>
+
+  <!-- Slicer Dropdown Box -->
+  <div class="slicer-dropdown" id="@(Model.Id)_menu">
+    <!-- Blue Header with Select All Checkbox -->
+    <div class="slicer-header" onclick="toggleSlicerAll('@Model.Id', event)">
+      <div class="slicer-header-checkbox @(checkedCount > 0 ? "checked" : "")">
+        <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <span class="slicer-header-title">@Model.HeaderTitle</span>
+    </div>
+
+    <!-- Search Box -->
+    <div class="slicer-search-container">
+      <input type="text" class="slicer-search-input" placeholder="Ketik untuk menelusuri" oninput="filterSlicerItems('@Model.Id', this.value)" autocomplete="off" />
+    </div>
+
+    <!-- Scrollable Items List -->
+    <div class="slicer-options-list">
+      @foreach (var item in Model.Items)
+      {
+        <label class="slicer-option-row" data-search="@(item.MainText + " " + item.SubText)">
+          <input type="checkbox" name="@Model.Name" value="@item.Value" @(item.IsChecked ? "checked" : "") class="slicer-real-checkbox" onchange="updateSlicerState('@Model.Id')" />
+          <div class="slicer-item-checkbox @(item.IsChecked ? "checked" : "")">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div class="slicer-item-text">
+            <span class="slicer-text-main">@item.MainText</span>
+            @if (!string.IsNullOrEmpty(item.SubText))
+            {
+              <span class="slicer-text-sub">@item.SubText</span>
+            }
+          </div>
+          <button type="button" class="slicer-btn-only" onclick="selectSlicerOnly(this, event)" title="Hanya pilih @item.MainText">HANYA</button>
+        </label>
+      }
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="slicer-action-bar">
+      <button type="button" class="slicer-btn-reset" onclick="resetSlicer('@Model.Id')">Reset</button>
+      <button type="button" class="slicer-btn-apply" onclick="applySlicerFilter('@Model.Id')">Terapkan</button>
+    </div>
+  </div>
+</div>

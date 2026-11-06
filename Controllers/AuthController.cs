@@ -99,10 +99,11 @@ namespace QWorks.Controllers
         public async Task<IActionResult> LookupNpk(string npk)
         {
             string clean = (npk ?? "").Trim().ToUpperInvariant();
-            if (clean.Length < 2) return Json(new { success = false });
+            if (string.IsNullOrWhiteSpace(clean)) return Json(new { success = false, message = "NPK wajib diisi." });
 
+            // Hanya cocokkan jika NPK cocok sepenuhnya (Exact match), bukan pencocokan sebagian (StartsWith)
             var emp = await _context.Users
-                .Where(u => u.Role == "karyawan" && u.Nik.ToUpper().StartsWith(clean))
+                .Where(u => u.Role == "karyawan" && u.Nik.ToUpper() == clean)
                 .Select(u => new { npk = u.Nik, name = u.Name, plant = u.Plant })
                 .FirstOrDefaultAsync();
 
@@ -111,7 +112,7 @@ namespace QWorks.Controllers
                 return Json(new { success = true, name = emp.name, plant = emp.plant });
             }
 
-            return Json(new { success = false });
+            return Json(new { success = false, message = $"NPK {clean} tidak ditemukan dalam data Master Pekerja." });
         }
     }
 }

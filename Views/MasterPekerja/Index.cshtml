@@ -31,7 +31,18 @@
         <span class="hero-dept-tag">QUALITY CONTROL</span>
         <h1 class="hero-main-title">Master Data Pekerja QC</h1>
         <span class="hero-desc">
-          Manajemen data anggota seluruh plant QC, tambah data, serta ekspor & impor massal Excel.
+          @if (isAdmin)
+          {
+            <text>Manajemen data anggota seluruh plant QC, tambah data, serta ekspor & impor massal Excel.</text>
+          }
+          else if (Model.AllowedPlants.Count > 1)
+          {
+            <text>Daftar rekan kerja dan anggota tim di <strong>Plant Subcont & Plant Lab Mixing</strong>.</text>
+          }
+          else
+          {
+            <text>Daftar rekan kerja dan anggota tim di <strong>@(currentUser?.Plant ?? "Plant Anda")</strong>.</text>
+          }
         </span>
       </div>
     </div>
@@ -145,33 +156,59 @@
 
     <!-- Right: Quick Plant Selector + Counter + Reset -->
     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-      <!-- Quick Plant Selector -->
-      <form method="get" action="/MasterPekerja" style="position: relative;">
-        <input type="hidden" name="search" value="@Model.SearchKeyword" />
-        <select
-          name="plant"
-          onchange="this.form.submit();"
+      @if (isAdmin || Model.AllowedPlants.Count > 1)
+      {
+        <!-- Quick Plant Selector -->
+        <form method="get" action="/MasterPekerja" style="position: relative;">
+          <input type="hidden" name="search" value="@Model.SearchKeyword" />
+          <select
+            name="plant"
+            onchange="this.form.submit();"
+            style="
+              padding: 9px 32px 9px 12px;
+              border-radius: 8px;
+              background: rgba(9, 26, 56, 0.7);
+              border: 1px solid rgba(56, 189, 248, 0.25);
+              color: #e2e8f0;
+              font-size: 0.84rem;
+              font-weight: 600;
+              outline: none;
+              cursor: pointer;
+              appearance: none;
+            "
+          >
+            <option value="ALL" selected="@(Model.SelectedPlant == "ALL")">@(isAdmin ? "Semua Plant" : "Semua Plant Akses")</option>
+            @foreach (var p in Model.AllowedPlants)
+            {
+              <option value="@p" selected="@(Model.SelectedPlant == p)">@p</option>
+            }
+          </select>
+          <i data-lucide="building-2" style="width: 13px; height: 13px; color: #38bdf8; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
+        </form>
+      }
+      else
+      {
+        <!-- Locked Plant Badge for Worker -->
+        <div
           style="
-            padding: 9px 32px 9px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
             border-radius: 8px;
-            background: rgba(9, 26, 56, 0.7);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            color: #e2e8f0;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #34d399;
             font-size: 0.84rem;
-            font-weight: 600;
-            outline: none;
-            cursor: pointer;
-            appearance: none;
+            font-weight: 700;
+            white-space: nowrap;
           "
+          title="Plant Anda: @(currentUser?.Plant)"
         >
-          <option value="ALL" selected="@(Model.SelectedPlant == "ALL")">Semua Plant</option>
-          @foreach (var p in Model.AllowedPlants)
-          {
-            <option value="@p" selected="@(Model.SelectedPlant == p)">@p</option>
-          }
-        </select>
-        <i data-lucide="building-2" style="width: 13px; height: 13px; color: #38bdf8; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none;"></i>
-      </form>
+          <i data-lucide="building-2" style="width: 14px; height: 14px; color: #34d399;"></i>
+          <span>@(currentUser?.Plant ?? "Plant Anda")</span>
+        </div>
+      }
 
       <!-- Counter Badge -->
       <div
@@ -194,7 +231,7 @@
       </div>
 
       <!-- Reset Button -->
-      @if (!string.IsNullOrEmpty(Model.SearchKeyword) || Model.SelectedPlant != "ALL")
+      @if (!string.IsNullOrEmpty(Model.SearchKeyword) || (Model.SelectedPlant != "ALL" && (isAdmin || Model.AllowedPlants.Count > 1)))
       {
         <a
           href="/MasterPekerja"
@@ -267,7 +304,7 @@
           }
           else
           {
-            int startIdx = (Model.CurrentPage - 1) * 20;
+            int startIdx = (Model.CurrentPage - 1) * Model.PageSize;
             int idx = 1;
             foreach (var emp in Model.Employees)
             {
@@ -320,7 +357,7 @@
                     <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
                       <button
                         type="button"
-                        onclick="openEditModal('@emp.Npk', '@emp.Name', '@emp.Plant');"
+                        onclick="openEditModal(@emp.Id, '@emp.Npk', '@emp.Name', '@emp.Plant');"
                         style="width: 28px; height: 28px; border-radius: 6px; background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; display: flex; align-items: center; justify-content: center; cursor: pointer;"
                         title="Edit pekerja"
                       >
@@ -329,6 +366,7 @@
 
                       <form method="post" action="/MasterPekerja/Delete/@emp.Npk" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pekerja @emp.Name (@emp.Npk)?');" style="margin: 0;">
                         @Html.AntiForgeryToken()
+                        <input type="hidden" name="npk" value="@emp.Npk" />
                         <button
                           type="submit"
                           style="width: 28px; height: 28px; border-radius: 6px; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.35); color: #fb7185; display: flex; align-items: center; justify-content: center; cursor: pointer;"
@@ -388,14 +426,16 @@
       </button>
     </div>
 
-    <form id="workerForm" method="post" action="/MasterPekerja/Add">
+    <form id="workerForm" method="post" action="/MasterPekerja/Add" onsubmit="document.getElementById('workerNikHidden').value = document.getElementById('workerNpk').value;">
       @Html.AntiForgeryToken()
+      <input type="hidden" name="id" id="workerId" value="0" />
+      <input type="hidden" name="nik" id="workerNikHidden" value="" />
       <input type="hidden" name="isEdit" id="workerIsEdit" value="false" />
 
       <div style="display: flex; flex-direction: column; gap: 16px;">
         <div>
           <label style="display: block; font-size: 0.84rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px;">NPK</label>
-          <input type="text" name="npk" id="workerNpk" required placeholder="Contoh: 1747" style="width: 100%; height: 42px; padding: 0 14px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-family: 'JetBrains Mono', monospace; font-weight: 700; box-sizing: border-box;" />
+          <input type="text" name="npk" id="workerNpk" required placeholder="Contoh: 1747" oninput="document.getElementById('workerNikHidden').value = this.value;" style="width: 100%; height: 42px; padding: 0 14px; background: rgba(5, 14, 30, 0.8); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #FFF8E7; font-family: 'JetBrains Mono', monospace; font-weight: 700; box-sizing: border-box;" />
         </div>
 
         <div>
@@ -486,18 +526,24 @@
 
   function openAddModal() {
     document.getElementById('modalWorkerTitle').innerHTML = '<i data-lucide="user-plus" style="width: 18px; height: 18px; color: #00d2ff;"></i><span>Tambah Pekerja Baru</span>';
+    document.getElementById('workerForm').action = '/MasterPekerja/Add';
+    document.getElementById('workerId').value = '0';
     document.getElementById('workerIsEdit').value = 'false';
     document.getElementById('workerNpk').readOnly = false;
     document.getElementById('workerNpk').value = '';
+    document.getElementById('workerNikHidden').value = '';
     document.getElementById('workerName').value = '';
     document.getElementById('modalAddEditWorker').style.display = 'flex';
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
-  function openEditModal(npk, name, plant) {
+  function openEditModal(id, npk, name, plant) {
     document.getElementById('modalWorkerTitle').innerHTML = '<i data-lucide="pencil" style="width: 18px; height: 18px; color: #00d2ff;"></i><span>Edit Data Pekerja</span>';
+    document.getElementById('workerForm').action = '/MasterPekerja/Edit';
+    document.getElementById('workerId').value = id || '0';
     document.getElementById('workerIsEdit').value = 'true';
     document.getElementById('workerNpk').value = npk;
+    document.getElementById('workerNikHidden').value = npk;
     document.getElementById('workerNpk').readOnly = true;
     document.getElementById('workerName').value = name;
     

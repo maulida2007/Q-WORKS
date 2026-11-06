@@ -1,0 +1,453 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\css\\fonts.css",
+      "PackagePath": "staticwebassets\\css\\fonts.css"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\css\\index.css",
+      "PackagePath": "staticwebassets\\css\\index.css"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\css\\slicer.css",
+      "PackagePath": "staticwebassets\\css\\slicer.css"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-300-normal-158878.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-300-normal-158878.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-300-normal-160008.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-300-normal-160008.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-300-normal-211099.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-300-normal-211099.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-300-normal-552946.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-300-normal-552946.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-300-normal-779197.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-300-normal-779197.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-300-normal-838789.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-300-normal-838789.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-300-normal-900431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-300-normal-900431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-400-normal-158878.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-400-normal-158878.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-400-normal-160008.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-400-normal-160008.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-400-normal-211099.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-400-normal-211099.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-400-normal-552946.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-400-normal-552946.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-400-normal-779197.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-400-normal-779197.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-400-normal-838789.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-400-normal-838789.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-400-normal-900431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-400-normal-900431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-500-normal-158878.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-500-normal-158878.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-500-normal-160008.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-500-normal-160008.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-500-normal-211099.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-500-normal-211099.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-500-normal-552946.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-500-normal-552946.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-500-normal-779197.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-500-normal-779197.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-500-normal-838789.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-500-normal-838789.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-500-normal-900431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-500-normal-900431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-600-normal-158878.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-600-normal-158878.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-600-normal-160008.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-600-normal-160008.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-600-normal-211099.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-600-normal-211099.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-600-normal-552946.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-600-normal-552946.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-600-normal-779197.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-600-normal-779197.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-600-normal-838789.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-600-normal-838789.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-600-normal-900431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-600-normal-900431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-700-normal-158878.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-700-normal-158878.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-700-normal-160008.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-700-normal-160008.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-700-normal-211099.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-700-normal-211099.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-700-normal-552946.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-700-normal-552946.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-700-normal-779197.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-700-normal-779197.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-700-normal-838789.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-700-normal-838789.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-700-normal-900431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-700-normal-900431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-800-normal-158878.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-800-normal-158878.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-800-normal-160008.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-800-normal-160008.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-800-normal-211099.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-800-normal-211099.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-800-normal-552946.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-800-normal-552946.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-800-normal-779197.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-800-normal-779197.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-800-normal-838789.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-800-normal-838789.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-800-normal-900431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-800-normal-900431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-900-normal-158878.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-900-normal-158878.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-900-normal-160008.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-900-normal-160008.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-900-normal-211099.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-900-normal-211099.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-900-normal-552946.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-900-normal-552946.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-900-normal-779197.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-900-normal-779197.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-900-normal-838789.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-900-normal-838789.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\inter\\Inter-900-normal-900431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\inter\\Inter-900-normal-900431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-100074.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-100074.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-331767.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-331767.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-386908.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-386908.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-478830.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-478830.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-734368.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-734368.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-881431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-400-normal-881431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-100074.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-100074.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-331767.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-331767.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-386908.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-386908.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-478830.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-478830.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-734368.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-734368.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-881431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-500-normal-881431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-100074.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-100074.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-331767.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-331767.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-386908.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-386908.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-478830.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-478830.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-734368.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-734368.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-881431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-600-normal-881431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-100074.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-100074.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-331767.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-331767.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-386908.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-386908.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-478830.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-478830.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-734368.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-734368.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-881431.woff2",
+      "PackagePath": "staticwebassets\\fonts\\jetbrains-mono\\JetBrains Mono-700-normal-881431.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-700-normal-147966.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-700-normal-147966.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-700-normal-149760.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-700-normal-149760.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-700-normal-170685.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-700-normal-170685.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-700-normal-183791.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-700-normal-183791.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-700-normal-678814.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-700-normal-678814.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-800-normal-147966.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-800-normal-147966.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-800-normal-149760.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-800-normal-149760.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-800-normal-170685.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-800-normal-170685.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-800-normal-183791.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-800-normal-183791.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-800-normal-678814.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-800-normal-678814.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-900-normal-147966.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-900-normal-147966.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-900-normal-149760.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-900-normal-149760.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-900-normal-170685.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-900-normal-170685.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-900-normal-183791.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-900-normal-183791.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\montserrat\\Montserrat-900-normal-678814.woff2",
+      "PackagePath": "staticwebassets\\fonts\\montserrat\\Montserrat-900-normal-678814.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-400-normal-101787.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-400-normal-101787.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-400-normal-204640.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-400-normal-204640.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-500-normal-101787.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-500-normal-101787.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-500-normal-204640.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-500-normal-204640.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-600-normal-101787.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-600-normal-101787.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-600-normal-204640.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-600-normal-204640.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-700-normal-101787.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-700-normal-101787.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-700-normal-204640.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-700-normal-204640.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-800-normal-101787.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-800-normal-101787.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-800-normal-204640.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-800-normal-204640.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-900-normal-101787.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-900-normal-101787.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\fonts\\outfit\\Outfit-900-normal-204640.woff2",
+      "PackagePath": "staticwebassets\\fonts\\outfit\\Outfit-900-normal-204640.woff2"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\js\\qworks-ui.js",
+      "PackagePath": "staticwebassets\\js\\qworks-ui.js"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\js\\slicer.js",
+      "PackagePath": "staticwebassets\\js\\slicer.js"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\lib\\chartjs\\chart.umd.js",
+      "PackagePath": "staticwebassets\\lib\\chartjs\\chart.umd.js"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\lib\\confetti\\confetti.browser.js",
+      "PackagePath": "staticwebassets\\lib\\confetti\\confetti.browser.js"
+    },
+    {
+      "Id": "C:\\UJIKOM\\Q-WORKS\\wwwroot\\lib\\lucide\\lucide.min.js",
+      "PackagePath": "staticwebassets\\lib\\lucide\\lucide.min.js"
+    },
+    {
+      "Id": "obj\\Release\\net8.0\\staticwebassets\\msbuild.Q-WORKS.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Release\\net8.0\\staticwebassets\\msbuild.build.Q-WORKS.props",
+      "PackagePath": "build\\Q-WORKS.props"
+    },
+    {
+      "Id": "obj\\Release\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.Q-WORKS.props",
+      "PackagePath": "buildMultiTargeting\\Q-WORKS.props"
+    },
+    {
+      "Id": "obj\\Release\\net8.0\\staticwebassets\\msbuild.buildTransitive.Q-WORKS.props",
+      "PackagePath": "buildTransitive\\Q-WORKS.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

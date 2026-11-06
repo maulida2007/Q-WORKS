@@ -1,0 +1,359 @@
+/* ========================================================
+   POWER BI STYLE SLICER / MULTI-SELECT DROPDOWN FILTER
+   ======================================================== */
+
+.slicer-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.slicer-trigger {
+  background: #182338;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+
+.slicer-trigger:hover {
+  background: #1e2e4a;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.slicer-trigger.active {
+  border-color: #38bdf8;
+  background: #182844;
+}
+
+.slicer-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.slicer-trigger-title {
+  font-size: 0.84rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.slicer-trigger-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 1px 6px;
+  border-radius: 10px;
+  line-height: 1.2;
+}
+
+.slicer-trigger-arrow {
+  color: #ffffff;
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 6px;
+  display: inline-block;
+}
+
+.slicer-trigger.active .slicer-trigger-arrow {
+  transform: rotate(180deg);
+}
+
+/* Slicer Dropdown Box */
+.slicer-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 250px;
+  width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #1d4ed8;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 4px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1050;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slicerFadeIn 0.15s ease-out;
+}
+
+.slicer-dropdown.open {
+  display: flex;
+}
+
+.slicer-select-wrapper.align-right .slicer-dropdown,
+.slicer-select-wrapper:last-child .slicer-dropdown {
+  left: auto;
+  right: 0;
+}
+
+@keyframes slicerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header Ribbon */
+.slicer-header {
+  background: #1d4ed8;
+  color: #ffffff;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.slicer-header:hover {
+  background: #1e40af;
+}
+
+.slicer-header-checkbox {
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  color: #1d4ed8;
+}
+
+.slicer-header-checkbox svg {
+  display: none;
+  stroke: #1d4ed8;
+}
+
+.slicer-header-checkbox.checked svg {
+  display: block;
+}
+
+.slicer-header-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
+/* Search Box */
+.slicer-search-container {
+  padding: 8px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.slicer-search-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: #1e293b;
+  outline: none;
+  background: #ffffff;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.slicer-search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.slicer-search-input::placeholder {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+/* Scrollable Options List */
+.slicer-options-list {
+  background: #f0f6ff;
+  max-height: 230px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.slicer-options-list::-webkit-scrollbar {
+  width: 6px;
+}
+.slicer-options-list::-webkit-scrollbar-track {
+  background: #e2ecf9;
+}
+.slicer-options-list::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+.slicer-options-list::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Option Row */
+.slicer-option-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 14px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid #e4edf8;
+  background: #f0f6ff;
+  margin: 0;
+  transition: background 0.15s ease;
+}
+
+.slicer-option-row:hover {
+  background: #e0edfd;
+}
+
+.slicer-option-row.hidden {
+  display: none !important;
+}
+
+.slicer-real-checkbox {
+  display: none !important;
+}
+
+.slicer-item-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #2563eb;
+  border-radius: 3px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.15s ease;
+}
+
+.slicer-item-checkbox svg {
+  display: none;
+  stroke: #ffffff;
+}
+
+.slicer-item-checkbox.checked {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.slicer-item-checkbox.checked svg {
+  display: block;
+}
+
+.slicer-item-text {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.slicer-text-main {
+  font-size: 0.90rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  line-height: 1.25;
+}
+
+.slicer-text-sub {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  line-height: 1.25;
+  margin-top: 1px;
+}
+
+/* Button "HANYA" */
+.slicer-btn-only {
+  margin-left: auto;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  line-height: 1.3;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.35);
+}
+
+.slicer-btn-only:hover {
+  background: #1d4ed8;
+  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.5);
+  transform: translateY(-1px);
+}
+
+.slicer-btn-only:active {
+  transform: translateY(0);
+}
+
+/* Bottom Action Bar */
+.slicer-action-bar {
+  padding: 8px 12px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.slicer-btn-reset {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.slicer-btn-reset:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.slicer-btn-apply {
+  background: #1d4ed8;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 0.80rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.slicer-btn-apply:hover {
+  background: #1e40af;
+}

@@ -126,98 +126,96 @@
       </div>
     </div>
 
+    @{
+      var rekapMonthSlicer = new SlicerViewModel
+      {
+        Id = "slicerRekapMonths",
+        Name = "months",
+        Title = "BULAN",
+        HeaderTitle = "Bulan",
+        Items = Model.MonthList.Select(m => {
+          var parts = m.Split(' ');
+          return new SlicerItemViewModel
+          {
+            Value = m,
+            MainText = parts.Length > 0 ? parts[0] : m,
+            SubText = parts.Length > 1 ? parts[1] : "",
+            IsChecked = Model.SelectedMonths.Any(sm => sm.Equals(m, StringComparison.OrdinalIgnoreCase) || DashboardController.NormalizeToIndonesianMonth(sm).Equals(m, StringComparison.OrdinalIgnoreCase))
+          };
+        }).ToList()
+      };
+
+      var rekapDaySlicer = new SlicerViewModel
+      {
+        Id = "slicerRekapDays",
+        Name = "days",
+        Title = "TANGGAL",
+        HeaderTitle = "Tanggal",
+        Items = Model.DayList.Select(d => new SlicerItemViewModel
+        {
+          Value = d,
+          MainText = $"Tanggal {d}",
+          SubText = "",
+          IsChecked = Model.SelectedDays.Contains(d)
+        }).ToList()
+      };
+
+      var rekapShiftSlicer = new SlicerViewModel
+      {
+        Id = "slicerRekapShifts",
+        Name = "shifts",
+        Title = "SHIFT",
+        HeaderTitle = "Shift",
+        Items = Model.ShiftList.Select(s => new SlicerItemViewModel
+        {
+          Value = s,
+          MainText = s,
+          SubText = "",
+          IsChecked = Model.SelectedShifts.Contains(s) || (s.Contains("1") && Model.SelectedShifts.Contains("1")) || (s.Contains("2") && Model.SelectedShifts.Contains("2"))
+        }).ToList()
+      };
+
+      var rekapPlantSlicer = new SlicerViewModel
+      {
+        Id = "slicerRekapPlants",
+        Name = "plants",
+        Title = "PLANT",
+        HeaderTitle = "Plant",
+        AlignRight = true,
+        Items = Model.PlantList.Select(p => new SlicerItemViewModel
+        {
+          Value = p,
+          MainText = p,
+          SubText = "",
+          IsChecked = Model.SelectedPlants.Contains(p) || Model.SelectedPlants.Any(sp => sp.Equals(p, StringComparison.OrdinalIgnoreCase) || p.IndexOf(sp, StringComparison.OrdinalIgnoreCase) >= 0 || sp.IndexOf(p, StringComparison.OrdinalIgnoreCase) >= 0)
+        }).ToList()
+      };
+
+      var rekapEmpSlicer = new SlicerViewModel
+      {
+        Id = "slicerRekapEmployees",
+        Name = "employees",
+        Title = "KARYAWAN",
+        HeaderTitle = "Karyawan",
+        AlignRight = true,
+        Items = Model.EmployeeList.Select(e => new SlicerItemViewModel
+        {
+          Value = e.Npk,
+          MainText = e.Name,
+          SubText = $"NPK: {e.Npk} • {e.Plant}",
+          IsChecked = Model.SelectedEmployees.Contains(e.Npk) || Model.SelectedEmployees.Contains(e.Id.ToString()) || Model.SelectedEmployees.Contains(e.Name)
+        }).ToList()
+      };
+    }
+
     <!-- Filter Form Grid -->
     <form id="rekapFilterForm" method="get" action="/Overtime/Rekap">
       <div class="filter-boxes-grid">
-        <!-- 1. Bulan -->
-        <div class="filter-param-box">
-          <div class="filter-param-box-left">
-            <i data-lucide="calendar" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
-            <div class="filter-param-box-texts">
-              <span class="filter-param-box-label">Bulan</span>
-              <select name="months" id="rekapMonths" class="filter-box-native-select" onchange="onFilterMonthChange(this, 'rekapDays');">
-                <option value="">Semua Bulan</option>
-                @foreach (var m in Model.MonthList)
-                {
-                  <option value="@m" selected="@(Model.SelectedMonths.Contains(m))">@m</option>
-                }
-              </select>
-            </div>
-          </div>
-          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-        </div>
-
-        <!-- 2. Tanggal -->
-        <div class="filter-param-box">
-          <div class="filter-param-box-left">
-            <i data-lucide="calendar" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
-            <div class="filter-param-box-texts">
-              <span class="filter-param-box-label">Tanggal</span>
-              <select name="days" id="rekapDays" class="filter-box-native-select" onchange="this.form.submit();">
-                <option value="">Semua Tanggal</option>
-                @foreach (var s in Model.DayList)
-                {
-                  <option value="@s" selected="@(Model.SelectedDays.Contains(s))">Tanggal @s</option>
-                }
-              </select>
-            </div>
-          </div>
-          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-        </div>
-
-        <!-- 3. Shift -->
-        <div class="filter-param-box">
-          <div class="filter-param-box-left">
-            <i data-lucide="clock" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
-            <div class="filter-param-box-texts">
-              <span class="filter-param-box-label">Shift</span>
-              <select name="shifts" class="filter-box-native-select" onchange="this.form.submit();">
-                <option value="">Semua Shift</option>
-                @foreach (var s in Model.ShiftList)
-                {
-                  <option value="@s" selected="@(Model.SelectedShifts.Contains(s))">@s</option>
-                }
-              </select>
-            </div>
-          </div>
-          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-        </div>
-
-        <!-- 4. Plant -->
-        <div class="filter-param-box">
-          <div class="filter-param-box-left">
-            <i data-lucide="building-2" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
-            <div class="filter-param-box-texts">
-              <span class="filter-param-box-label">Plant</span>
-              <select name="plants" class="filter-box-native-select" onchange="this.form.submit();">
-                <option value="">Semua Plant</option>
-                @foreach (var p in Model.PlantList)
-                {
-                  <option value="@p" selected="@(Model.SelectedPlants.Contains(p))">@p</option>
-                }
-              </select>
-            </div>
-          </div>
-          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-        </div>
-
-        <!-- 5. Karyawan -->
-        <div class="filter-param-box">
-          <div class="filter-param-box-left">
-            <i data-lucide="users" style="width: 15px; height: 15px; color: #8CC1E9; flex-shrink: 0;"></i>
-            <div class="filter-param-box-texts">
-              <span class="filter-param-box-label">Karyawan</span>
-              <select name="employees" class="filter-box-native-select" onchange="this.form.submit();">
-                <option value="">Semua Karyawan</option>
-                @foreach (var emp in Model.EmployeeList)
-                {
-                  <option value="@emp.Npk" selected="@(Model.SelectedEmployees.Contains(emp.Npk))">@emp.Name (@emp.Npk)</option>
-                }
-              </select>
-            </div>
-          </div>
-          <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-        </div>
+        <partial name="_SlicerDropdown" model="rekapMonthSlicer" />
+        <partial name="_SlicerDropdown" model="rekapDaySlicer" />
+        <partial name="_SlicerDropdown" model="rekapShiftSlicer" />
+        <partial name="_SlicerDropdown" model="rekapPlantSlicer" />
+        <partial name="_SlicerDropdown" model="rekapEmpSlicer" />
       </div>
 
       <!-- Universal Search Bar -->

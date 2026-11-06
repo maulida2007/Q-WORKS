@@ -104,7 +104,7 @@
       <div class="filter-parameter-title-group">
         <i data-lucide="filter" style="width: 15px; height: 15px; color: #38bdf8;"></i>
         <span class="filter-param-header-text">Filter Parameter</span>
-        <span class="filter-live-pill">All Plants</span>
+        <span class="filter-live-pill">Live Filter</span>
       </div>
 
       <div class="filter-parameter-actions">
@@ -116,97 +116,106 @@
     </div>
 
     <!-- 5-Column Filter Parameter Form Grid -->
+    @{
+      var monthSlicer = new SlicerViewModel
+      {
+        Id = "slicerDashboardMonths",
+        Name = "months",
+        Title = "BULAN",
+        HeaderTitle = "Bulan",
+        Items = Model.MonthList.Select(m => {
+          var parts = m.Split(' ');
+          return new SlicerItemViewModel
+          {
+            Value = m,
+            MainText = parts.Length > 0 ? parts[0] : m,
+            SubText = parts.Length > 1 ? parts[1] : "",
+            IsChecked = Model.SelectedMonths.Any(sm => sm.Equals(m, StringComparison.OrdinalIgnoreCase) || DashboardController.NormalizeToIndonesianMonth(sm).Equals(m, StringComparison.OrdinalIgnoreCase))
+          };
+        }).ToList()
+      };
+
+      var daySlicer = new SlicerViewModel
+      {
+        Id = "slicerDashboardDays",
+        Name = "days",
+        Title = "TANGGAL",
+        HeaderTitle = "Tanggal",
+        Items = Model.DayList.Select(d => new SlicerItemViewModel
+        {
+          Value = d,
+          MainText = $"Tanggal {d}",
+          SubText = "",
+          IsChecked = Model.SelectedDays.Contains(d)
+        }).ToList()
+      };
+
+      var shiftSlicer = new SlicerViewModel
+      {
+        Id = "slicerDashboardShifts",
+        Name = "shifts",
+        Title = "SHIFT",
+        HeaderTitle = "Shift",
+        Items = new List<SlicerItemViewModel>
+        {
+          new SlicerItemViewModel
+          {
+            Value = "Shift 1",
+            MainText = "Shift 1",
+            SubText = "",
+            IsChecked = Model.SelectedShifts.Contains("Shift 1") || Model.SelectedShifts.Contains("1")
+          },
+          new SlicerItemViewModel
+          {
+            Value = "Shift 2",
+            MainText = "Shift 2",
+            SubText = "",
+            IsChecked = Model.SelectedShifts.Contains("Shift 2") || Model.SelectedShifts.Contains("2")
+          }
+        }
+      };
+
+      var plantSlicer = new SlicerViewModel
+      {
+        Id = "slicerDashboardPlants",
+        Name = "plants",
+        Title = "PLANT",
+        HeaderTitle = "Plant",
+        AlignRight = true,
+        Items = Model.AllowedPlants
+          .Where(p => p.Id != "all-plants")
+          .Select(p => new SlicerItemViewModel
+          {
+            Value = p.Dept,
+            MainText = p.Dept,
+            SubText = "",
+            IsChecked = Model.SelectedPlants.Contains(p.Dept) || Model.SelectedPlants.Contains(p.Id) || Model.SelectedPlants.Any(sp => sp.Equals(p.Dept, StringComparison.OrdinalIgnoreCase) || p.Dept.IndexOf(sp, StringComparison.OrdinalIgnoreCase) >= 0)
+          }).ToList()
+      };
+
+      var empSlicer = new SlicerViewModel
+      {
+        Id = "slicerDashboardEmployees",
+        Name = "employees",
+        Title = "KARYAWAN",
+        HeaderTitle = "Karyawan",
+        AlignRight = true,
+        Items = Model.AllEmployees.Select(e => new SlicerItemViewModel
+        {
+          Value = e.Npk,
+          MainText = e.Name,
+          SubText = $"NPK: {e.Npk} • {e.Plant}",
+          IsChecked = Model.SelectedEmployees.Contains(e.Npk) || Model.SelectedEmployees.Contains(e.Id.ToString()) || Model.SelectedEmployees.Contains(e.Name)
+        }).ToList()
+      };
+    }
+
     <form id="dashboardFilterForm" method="get" action="/Dashboard" class="filter-boxes-grid">
-      <!-- Box 1: BULAN -->
-      <div class="filter-param-box">
-        <div class="filter-param-box-left">
-          <i data-lucide="calendar" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
-          <div class="filter-param-box-texts">
-            <span class="filter-param-box-label">Bulan</span>
-            <select name="months" id="dashboardMonths" class="filter-box-native-select" onchange="onFilterMonthChange(this, 'dashboardDays');">
-              <option value="">Semua Bulan</option>
-              @foreach (var m in Model.MonthList)
-              {
-                <option value="@m" selected="@(Model.SelectedMonths.Contains(m))">@m</option>
-              }
-            </select>
-          </div>
-        </div>
-        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-      </div>
-
-      <!-- Box 2: TANGGAL -->
-      <div class="filter-param-box">
-        <div class="filter-param-box-left">
-          <i data-lucide="calendar" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
-          <div class="filter-param-box-texts">
-            <span class="filter-param-box-label">Tanggal</span>
-            <select name="days" id="dashboardDays" class="filter-box-native-select" onchange="this.form.submit();">
-              <option value="">Semua Tanggal</option>
-              @foreach (var s in Model.DayList)
-              {
-                <option value="@s" selected="@(Model.SelectedDays.Contains(s))">Tanggal @s</option>
-              }
-            </select>
-          </div>
-        </div>
-        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-      </div>
-
-      <!-- Box 3: SHIFT -->
-      <div class="filter-param-box">
-        <div class="filter-param-box-left">
-          <i data-lucide="users" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
-          <div class="filter-param-box-texts">
-            <span class="filter-param-box-label">Shift</span>
-            <select name="shifts" class="filter-box-native-select" onchange="this.form.submit();">
-              <option value="">Semua Shift</option>
-              <option value="Shift 1" selected="@(Model.SelectedShifts.Contains("Shift 1"))">Shift 1 (Malam)</option>
-              <option value="Shift 2" selected="@(Model.SelectedShifts.Contains("Shift 2"))">Shift 2 (Pagi)</option>
-            </select>
-          </div>
-        </div>
-        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-      </div>
-
-      <!-- Box 4: PLANT -->
-      <div class="filter-param-box">
-        <div class="filter-param-box-left">
-          <i data-lucide="building-2" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
-          <div class="filter-param-box-texts">
-            <span class="filter-param-box-label">Plant</span>
-            <select name="plants" class="filter-box-native-select" onchange="this.form.submit();">
-              <option value="">Semua Plant</option>
-              @foreach (var p in Model.AllowedPlants)
-              {
-                if (p.Id != "all-plants")
-                {
-                  <option value="@p.Name" selected="@(Model.SelectedPlants.Contains(p.Name) || Model.SelectedPlants.Contains(p.Dept))">@p.Name</option>
-                }
-              }
-            </select>
-          </div>
-        </div>
-        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-      </div>
-
-      <!-- Box 5: KARYAWAN -->
-      <div class="filter-param-box">
-        <div class="filter-param-box-left">
-          <i data-lucide="user" style="width: 15px; height: 15px; color: #38bdf8; flex-shrink: 0;"></i>
-          <div class="filter-param-box-texts">
-            <span class="filter-param-box-label">Karyawan</span>
-            <select name="employees" class="filter-box-native-select" onchange="this.form.submit();">
-              <option value="">Semua Karyawan</option>
-              @foreach (var emp in Model.AllEmployees)
-              {
-                <option value="@emp.Npk" selected="@(Model.SelectedEmployees.Contains(emp.Npk))">@emp.Name (@emp.Npk)</option>
-              }
-            </select>
-          </div>
-        </div>
-        <i data-lucide="chevron-down" style="width: 14px; height: 14px; color: #8CC1E9; flex-shrink: 0;"></i>
-      </div>
+      <partial name="_SlicerDropdown" model="monthSlicer" />
+      <partial name="_SlicerDropdown" model="daySlicer" />
+      <partial name="_SlicerDropdown" model="shiftSlicer" />
+      <partial name="_SlicerDropdown" model="plantSlicer" />
+      <partial name="_SlicerDropdown" model="empSlicer" />
     </form>
   </div>
 

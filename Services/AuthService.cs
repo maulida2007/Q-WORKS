@@ -200,7 +200,7 @@ namespace QWorks.Services
             if (p.Contains("subcont") || p.Contains("mixing") || p.Contains("lab"))
                 return new List<string> { "Plant Subcont", "Plant Lab Mixing" };
 
-            return new List<string> { "Plant Hose" };
+            return new List<string> { user.Plant ?? "Plant Hose" };
         }
 
         public string GetDefaultDashboardView(CurrentUserSession? user)

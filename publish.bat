@@ -18,8 +18,20 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-echo [1/2] Melakukan dotnet publish (Mode Release)...
-dotnet publish -c Release -o ./publish_output
+echo Pilih jenis publish:
+echo [1] Self-Contained (Offline Penuh - Server TIDAK perlu install .NET 8) [Default]
+echo [2] Framework-Dependent (Ukuran kecil - Server WAJIB terinstall .NET 8 Runtime)
+set /p PUB_MODE="Pilihan Anda (1/2, default 1): "
+if "%PUB_MODE%"=="" set PUB_MODE=1
+
+echo.
+if "%PUB_MODE%"=="2" (
+    echo [1/2] Melakukan dotnet publish (Framework-Dependent Release)...
+    dotnet publish -c Release -o ./publish_output
+) else (
+    echo [1/2] Melakukan dotnet publish (Self-Contained win-x64 Full Offline)...
+    dotnet publish -c Release -r win-x64 --self-contained true -o ./publish_output
+)
 if %errorlevel% neq 0 (
     echo.
     echo [X] Gagal melakukan dotnet publish.
